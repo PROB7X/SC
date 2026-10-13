@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SOUL COMMAND</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: #0d0f12;
+            font-family: 'Courier New', Courier, monospace;
+            color: #e0e6ed;
+            position: relative;
+        }
+        
+        /* Экран блокировки */
+        #fullscreen-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(13, 15, 18, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 20px;
+        }
+        #fullscreen-overlay h1 {
+            color: #ff3e3e;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 62, 62, 0.5);
+        }
+        #fullscreen-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: #242933;
+            color: #00ffcc;
+            border: 2px solid #00ffcc;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            transition: 0.3s;
+        }
+
+        /* Главный контейнер */
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Панель ресурсов смещена вниз (из-за выреза/камеры) */
+        #top-bar {
+            background: #1a1f29;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 45px; /* Смещение ниже выреза камеры */
+            padding: 12px 5px;
+            border-bottom: 3px solid #242933;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .stat { color: #ffcc00; }
+        .stat.crystals { color: #00e5ff; }
+        .stat.player-name { color: #a3e7fc; }
+
+        /* Игровые экраны */
+        .screen-container {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+        .screen {
+            display: none;
+            padding: 20px;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Кнопка тапалки */
+        #tap-area {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #3a4454 0%, #1a1f29 100%);
+            border: 4px solid #ff3e3e;
+            box-shadow: 0 0 30px rgba(255, 62, 62, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            margin-bottom: 15px;
+        }
+        #tap-area:active {
+            transform: scale(0.95);
+            border-color: #00ffcc;
+        }
+
+        /* Лог системы */
+        .log-box {
+            background: #141822;
+            border: 1px solid #242933;
+            width: 95%;
+            max-width: 500px;
+            height: 120px;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 0.8rem;
+            text-align: left;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .log-entry { margin-bottom: 4px; }
+        .log-drop { color: #00ffcc; }
+        .log-error { color: #ff3e3e; }
+        .log-system { color: #ffcc00; }
+
+        /* Майнкрафт Инвентарь */
+        .mc-inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: #8b8b8b;
+            padding: 12px;
+            border: 4px solid #373737;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            box-shadow: inset -4px -4px 0 #555, inset 4px 4px 0 #dbdbdb;
+            margin-top: 15px;
+            max-width: 320px;
+        }
+        .mc-slot {
+            width: 72px;
+            height: 72px;
+            background: #8b8b8b;
+            border: 4px solid #373737;
+            border-top-color: #555;
+            border-left-color: #555;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 2px 2px 0 rgba(0,0,0,0.4);
+        }
+        .mc-slot svg {
+            width: 42px;
+            height: 42px;
+        }
+        .mc-count {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-family: inherit;
+            text-shadow: 2px 2px 0 #000;
+            font-weight: bold;
+        }
+
+        /* Консольный блок */
+        #console-wrapper {
+            background: #0d0f12;
+            border-top: 2px solid #ff3e3e;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        #console-wrapper.collapsed {
+            transform: translateY(calc(100% - 30px));
+        }
+
+        /* Переключатель сворачивания */
+        #console-toggle {
+            height: 30px;
+            background: #1a1f29;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #ff3e3e;
+            border-bottom: 1px solid #242933;
+        }
+
+        /* Подсказки */
+        #hints-container {
+            background: #161a22;
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            height: 35px;
+        }
+        .hint-badge {
+            background: #242933;
+            color: #00ffcc;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* Строка ввода */
+        #command-bar {
+            display: flex;
+            align-items: center;
+            height: 45px;
+            background: #0d0f12;
+        }
+        #cmd-prefix {
+            padding-left: 15px;
+            color: #ff3e3e;
+            font-weight: bold;
+        }
+        #cmd-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #00ffcc;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="fullscreen-overlay">
+        <h1>SOUL COMMAND</h1>
+        <p style="margin-bottom: 20px; color: #a3e7fc;">Требуется полноэкранный вертикальный режим</p>
+        <button id="fullscreen-btn">НА ВЕСЬ ЭКРАН</button>
+    </div>
+
+    <div id="game-container">
+        <!-- Ресурсы смещены вниз под вырез камеры -->
+        <div id="top-bar">
+            <div>Игрок: <span id="stat-name" class="stat player-name">Не вошел</span></div>
+            <div>Монеты: <span id="stat-coins" class="stat">0</span></div>
+            <div>Кристаллы: <span id="stat-crystals" class="stat crystals">0</span></div>
+        </div>
+
+        <div class="screen-container">
+            <!-- Главный экран -->
+            <div id="screen-home" class="screen active">
+                <div id="tap-area">TAP</div>
+                <div id="home-log" class="log-box">
+                    <div class="log-entry log-system">Система: SOUL COMMAND. Введите /reg [имя] для старта.</div>
+                </div>
+            </div>
+
+            <!-- Экран инвентаря -->
+            <div id="screen-inv" class="screen">
+                <h2>ИНВЕНТАРЬ</h2>
+                <div id="inv-grid" class="mc-inventory-grid"></div>
+            </div>
+
+            <!-- Экран крафта -->
+            <div id="screen-craft" class="screen">
+                <h2>КРАФТ ПРЕДМЕТОВ</h2>
+                <p style="font-size: 0.8rem; margin: 5px; color:#ffcc00;">Рецепты (ввод: /craft [название]):</p>
+                <div style="font-size:0.75rem; text-align:left; background:#141822; padding:8px; border-radius:4px; max-width:300px;">
+                    • ключ = 5 Железо + 2 Пыль<br>
+                    • амулет = 3 Осколок + 10 Железо
+                </div>
+                <div id="craft-grid" class="mc-inventory-grid"></div>
+            </div>
+
+            <!-- Экран кейсов -->
+            <div id="screen-cases" class="screen">
+                <h2>ОТКРЫТИЕ КЕЙСОВ</h2>
+                <p style="font-size:0.85rem; color:#00ffcc; margin-bottom:10px;">Команда: /cases открыть</p>
+                <div id="cases-grid" class="mc-inventory-grid"></div>
+            </div>
+        </div>
+
+        <!-- Сворачиваемая консоль -->
+        <div id="console-wrapper">
+            <div id="console-toggle">▼ СВЕРНУТЬ / РАЗВЕРНУТЬ КОНСОЛЬ ▼</div>
+            <div id="hints-container"></div>
+            <div id="command-bar">
+                <span id="cmd-prefix">></span>
+                <input type="text" id="cmd-input" placeholder="Введите команду..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Чистые SVG-иконки без загрузки картинок
+        const svgs = {
+            "Железо": `<svg viewBox="0 0 32 32"><path d="M4 16 L16 4 L28 16 L16 28 Z" fill="#d1d8e0" stroke="#708090" stroke-width="2"/></svg>`,
+            "Магическая пыль": `<svg viewBox="0 0 32 32"><circle cx="8" cy="8" r="3" fill="#e0aaff"/><circle cx="24" cy="12" r="2" fill="#c77dff"/><circle cx="14" cy="24" r="4" fill="#9d4edd"/></svg>`,
+            "Осколок Души": `<svg viewBox="0 0 32 32"><path d="M16 2 L24 14 L16 18 L8 14 Z" fill="#00e5ff" opacity="0.8"/><path d="M16 18 L24 14 L16 30 L8 14 Z" fill="#00838f"/></svg>`,
+            "Ключ от кейса": `<svg viewBox="0 0 32 32"><circle cx="10" cy="12" r="6" fill="none" stroke="#ffd700" stroke-width="4"/><path d="M16 12 L28 12 M24 12 L24 18 M28 12 L28 18" stroke="#ffd700" stroke-width="4" stroke-linecap="square"/></svg>`,
+            "Амулет Души": `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="#242933" stroke="#ff3e3e" stroke-width="3"/><circle cx="16" cy="16" r="5" fill="#00e5ff"/></svg>`,
+            "Секретный Меч": `<svg viewBox="0 0 32 32"><path d="M28 4 L24 8 L12 20 L8 20 L8 16 L20 4 Z" fill="#ff0055"/><rect x="4" y="24" width="6" height="6" fill="#ffd700"/><path d="M8 20 L4 24 M12 20 L8 24" stroke="#a3e7fc" stroke-width="2"/></svg>`
+        };
+
+        const player = {
+            registered: false,
+            name: "Не вошел",
+            coins: 0,
+            crystals: 0,
+            inventory: { "Железо": 0, "Магическая пыль": 0, "Осколок Души": 0, "Ключ от кейса": 0, "Амулет Души": 0, "Секретный Меч": 0 },
+            lvlTap: 1,
+            lvlLuck: 0,
+            usedPromo: false
+        };
+
+        const dropTable = [
+            { item: "Железо", baseChance: 0.035 },
+            { item: "Магическая пыль", baseChance: 0.012 },
+            { item: "Осколок Души", baseChance: 0.003 }
+        ];
+
+        const commandsConfig = [
+            { cmd: "/home", hint: "/home", auto: true },
+            { cmd: "/inv", hint: "/inv", auto: true },
+            { cmd: "/craft", hint: "/craft", auto: false },
+            { cmd: "/cases", hint: "/cases", auto: false },
+            { cmd: "/up", hint: "/up", auto: false },
+            { cmd: "/event", hint: "/event (Выкл)", auto: true },
+            { cmd: "/help", hint: "/help", auto: true },
+            { cmd: "/promo", hint: "/promo", auto: false }
+        ];
+
+        // Полноэкранный портретный режим
+        const overlay = document.getElementById('fullscreen-overlay');
+        async function activateFullscreen() {
+            try {
+                if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+                if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait');
+                overlay.style.display = 'none';
+            } catch (e) { overlay.style.display = 'none'; }
+        }
+        document.getElementById('fullscreen-btn').addEventListener('click', activateFullscreen);
+        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) overlay.style.display = 'flex'; });
+
+        // Сворачивание консоли
+        const consoleWrapper = document.getElementById('console-wrapper');
+        const toggleBtn = document.getElementById('console-toggle');
+        toggleBtn.addEventListener('click', () => {
+            consoleWrapper.classList.toggle('collapsed');
+            toggleBtn.innerText = consoleWrapper.classList.contains('collapsed') ? "▲ РАЗВЕРНУТЬ КОНСОЛЬ ▲" : "▼ СВЕРНУТЬ КОНСОЛЬ ▼";
+        });
+
+        function updateUI() {
+            document.getElementById('stat-name').innerText = player.name;
+            document.getElementById('stat-coins').innerText = player.coins;
+            document.getElementById('stat-crystals').innerText = player.crystals;
+            renderGrids();
+        }
+
+        function renderGrids() {
+            ["inv-grid", "craft-grid", "cases-grid"].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = '';
+                for (let item in player.inventory) {
+                    if (player.inventory[item] === 0 && (item === "Секретный Меч" || item === "Амулет Души" || item === "Ключ от кейса")) continue;
+                    const slot = document.createElement('div');
+                    slot.className = 'mc-slot';
+                    slot.innerHTML = (svgs[item] || '') + `<div class="mc-count">${player.inventory[item]}</div>`;
+                    el.appendChild(slot);
+                }
+            });
+        }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function logToHome(text, type = '') {
+            const box = document.getElementById('home-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerText = text;
+            box.appendChild(entry);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Клик тапалки (шанс ~1 к 20 тапам базово)
+        document.getElementById('tap-area').addEventListener('click', () => {
+            if (!player.registered) return logToHome("Ошибка: Введите /reg [имя]", "log-error");
+            player.coins += player.lvlTap;
+            let msg = `+${player.lvlTap} монет.`;
+            let rand = Math.random();
+            let luckMod = 1 + (player.lvlLuck * 0.2);
+            let dropped = null;
+            let currentChance = 0;
+
+            for (let d of dropTable) {
+                currentChance += (d.baseChance * luckMod);
+                if (rand <= currentChance) { dropped = d.item; break; }
+            }
+            let cName = '';
+            if (dropped) { player.inventory[dropped]++; msg += ` Найдено: [${dropped}]!`; cName = 'log-drop'; }
+            logToHome(msg, cName);
+            updateUI();
+        });
+
+        // Ввод команд
+        const input = document.getElementById('cmd-input');
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.trim();
+                input.value = '';
+                input.blur();
+                if (val) handleCommand(val);
+                updateHints('');
+            }
+        });
+
+        function handleCommand(str) {
+            if (!str.startsWith('/')) return logToHome("Ошибка: Команды начинаются с /", "log-error");
+            const args = str.split(' ');
+            const cmd = args[0].toLowerCase();
+
+            switch(cmd) {
+                case '/reg':
+                    if (player.registered) return logToHome("Вы уже зарегистрированы", "log-error");
+                    if (!args[1]) return logToHome("Использование: /reg [имя]", "log-error");
+                    player.name = args.slice(1).join(' ');
+                    player.registered = true;
+                    logToHome(`Успешный вход, ${player.name}!`, "log-system");
+                    break;
+                case '/home': switchScreen('screen-home'); break;
+                case '/inv': switchScreen('screen-inv'); break;
+                case '/event': logToHome("Режим /event деактивирован.", "log-error"); break;
+                case '/help':
+                    logToHome("Команды: /reg, /home, /inv, /craft, /cases, /up, /promo", "log-system");
+                    break;
+                case '/promo':
+                    if (player.usedPromo) return logToHome("Промокод уже использован", "log-error");
+                    if (args[1] === 'MY_K7D') {
+                        player.crystals += 50; player.usedPromo = true;
+                        logToHome("Активирован код! +50 кристаллов.", "log-drop");
+                    } else { logToHome("Неверный код.", "log-error"); }
+                    break;
+                case '/craft':
+                    switchScreen('screen-craft');
+                    if (args[1]) {
+                        let t = args.slice(1).join(' ').toLowerCase();
+                        if (t === 'ключ') {
+                            if (player.inventory["Железо"] >= 5 && player.inventory["Магическая пыль"] >= 2) {
+                                player.inventory["Железо"] -= 5; player.inventory["Магическая пыль"] -= 2;
+                                player.inventory["Ключ от кейса"]++; logToHome("Создан: Ключ от кейса!", "log-drop");
+                            } else logToHome("Мало ресурсов.", "log-error");
+                        } else if (t === 'амулет') {
+                            if (player.inventory["Осколок Души"] >= 3 && player.inventory["Железо"] >= 10) {
+                                player.inventory["Осколок Души"] -= 3; player.inventory["Железо"] -= 10;
+                                player.inventory["Амулет Души"]++; logToHome("Создан: Амулет Души!", "log-drop");
+                            } else logToHome("Мало ресурсов.", "log-error");
+                        } else if (t === 'секретный меч') {
+                            // Секретный рецепт скрыт от глаз
+                            if (player.inventory["Осколок Души"] >= 10 && player.inventory["Амулет Души"] >= 2) {
+                                player.inventory["Осколок Души"] -= 10; player.inventory["Амулет Души"] -= 2;
+                                player.inventory["Секретный Меч"]++; logToHome("!! Вы открыли СЕКРЕТНЫЙ КРАФТ: Секретный Меч !!", "log-drop");
+                            } else logToHome("Секретная комбинация не сработала.", "log-error");
+                        } else logToHome("Нет такого рецепта.", "log-error");
+                    }
+                    break;
+                case '/cases':
+                    switchScreen('screen-cases');
+                    if (args[1] === 'открыть') {
+                        if (player.inventory["Ключ от кейса"] > 0) {
+                            player.inventory["Ключ от кейса"]--;
+                            if (Math.random() > 0.5) { player.crystals += 25; logToHome("Кейс: +25 Кристаллов!", "log-drop"); }
+                            else { player.inventory["Амулет Души"]++; logToHome("Кейс: Амулет Души!", "log-drop"); }
+                        } else logToHome("Нет ключей. Создайте их в /craft", "log-error");
+                    }
+                    break;
+                case '/up':
+                    let upCostTap = player.lvlTap * 50;
+                    let upCostLuck = (player.lvlLuck + 1) * 100;
+                    if (args[1] === 'tap') {
+                        if (player.coins >= upCostTap) { player.coins -= upCostTap; player.lvlTap++; logToHome(`Прокачан Тап до ${player.lvlTap} ур.`); }
+                        else logToHome(`Мало монет. Нужно: ${upCostTap}`, "log-error");
+                    } else if (args[1] === 'luck') {
+                        if (player.coins >= upCostLuck) { player.coins -= upCostLuck; player.lvlLuck++; logToHome(`Прокачана Удача до ${player.lvlLuck} ур.`); }
+                        else logToHome(`Мало монет. Нужно: ${upCostLuck}`, "log-error");
+                    } else {
+                        logToHome(`Прокачка: /up tap (Цена: ${upCostTap}) или /up luck (Цена: ${upCostLuck})`, "log-system");
+                    }
+                    break;
+                default: logToHome("Неизвестная команда.", "log-error");
+            }
+            updateUI();
+        }
+
+        // Подсказки
+        const hints = document.getElementById('hints-container');
+        input.addEventListener('input', (e) => updateHints(e.target.value));
+
+        function updateHints(val) {
+            hints.innerHTML = '';
+            if (!val.startsWith('/') || !val) return;
+            commandsConfig.filter(c => c.cmd.startsWith(val.toLowerCase())).forEach(item => {
+                const b = document.createElement('div');
+                b.className = 'hint-badge';
+                b.innerText = item.hint;
+                b.addEventListener('click', () => {
+                    if (item.auto) {
+                        input.value = '';
+                        input.blur();
+                        handleCommand(item.cmd);
+                    } else {
+                        input.value = item.cmd + " ";
+                        input.focus();
+                    }
+                });
+                hints.appendChild(b);
+            });
+        }
+        updateUI();
+    </script>
+</body>
+</html>
