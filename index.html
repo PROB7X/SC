@@ -20,10 +20,17 @@
         #main-content { flex: 1; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; gap: 12px; align-items: center; }
         #timers-panel { width: 100%; display: flex; flex-direction: column; gap: 4px; }
         .timer-badge { background: rgba(255, 71, 87, 0.12); border: 1px solid #ff4757; color: #ff4757; padding: 3px 6px; font-size: 0.7rem; border-radius: 4px; text-align: center; }
-        #tap-wrapper { display: flex; justify-content: center; align-items: center; margin: 5px 0; }
-        #tap-area { width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, #2f3542 0%, #1e222b 100%); border: 4px solid #ff4757; box-shadow: 0 0 20px rgba(255, 71, 87, 0.25); display: flex; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: bold; color: #fff; transition: transform 0.05s ease; }
+        
+        /* СЕРИЯ ТАПОВ И БОСС ИНТЕРФЕЙС */
+        #streak-display { font-size: 0.85rem; color: #ffa502; font-weight: bold; background: rgba(255,165,0,0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255,165,0,0.3); display: none; }
+        #boss-ui { width: 100%; background: rgba(239, 87, 119, 0.15); border: 2px dashed #ff4757; border-radius: 8px; padding: 10px; text-align: center; display: none; flex-direction: column; gap: 5px; }
+
+        #tap-wrapper { display: flex; justify-content: center; align-items: center; margin: 5px 0; position: relative; }
+        #tap-area { width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, #2f3542 0%, #1e222b 100%); border: 4px solid #ff4757; box-shadow: 0 0 20px rgba(255, 71, 87, 0.25); display: flex; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: bold; color: #fff; transition: transform 0.05s ease; position: relative; z-index: 2; }
         #tap-area:active { transform: scale(0.93); border-color: #2ed573; box-shadow: 0 0 20px rgba(46, 213, 115, 0.35); }
-        #log-container { width: 100%; background: #07080a; border: 2px solid #232b38; border-radius: 6px; flex: 1; min-height: 110px; max-height: 170px; overflow-y: auto; padding: 8px; font-size: 0.75rem; }
+        #boss-graphics { position: absolute; width: 120px; height: 120px; display: none; z-index: 5; pointer-events: none; }
+
+        #log-container { width: 100%; background: #07080a; border: 2px solid #232b38; border-radius: 6px; flex: 1; min-height: 110px; max-height: 150px; overflow-y: auto; padding: 8px; font-size: 0.75rem; }
         .log-line { margin-bottom: 4px; line-height: 1.2; }
         .log-err { color: #ff4757; }
         .log-suc { color: #2ed573; }
@@ -31,15 +38,30 @@
         .sub-screen { width: 100%; background: #141720; border: 2px solid #232b38; border-radius: 8px; padding: 10px; display: none; flex-direction: column; gap: 8px; }
         .sub-screen.active { display: flex; }
         .sub-screen h3 { text-align: center; font-size: 0.95rem; color: #ff4757; border-bottom: 1px solid #232b38; padding-bottom: 4px; }
+        
+        /* ДИАЛОГ С БОССОМ */
+        #screen-dialog { background: #07080a; border-color: #ff4757; text-align: center; display: none; padding: 20px; border-radius: 8px; width: 100%; flex-direction: column; gap: 15px; }
+        #dialog-text { font-size: 1rem; color: #ff4757; text-shadow: 0 0 5px rgba(255,71,87,0.3); min-height: 60px; display: flex; align-items: center; justify-content: center; }
+
         .mc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; justify-content: center; }
+        
+        /* СЛОТЫ С АНИМАЦИЕЙ ПРЕДМЕТОВ */
         .mc-slot { width: 58px; height: 58px; background: #8b8b8b; border-top: 3px solid #373737; border-left: 3px solid #373737; border-bottom: 3px solid #fff; border-right: 3px solid #fff; position: relative; display: flex; justify-content: center; align-items: center; }
         .mc-slot:active { background: #b2b2b2; }
         .mc-slot.selected { border: 3px solid #2ed573 !important; background: #444; }
-        .mc-slot svg { width: 34px; height: 34px; pointer-events: none; }
+        .mc-slot svg { width: 34px; height: 34px; pointer-events: none; transition: transform 0.3s ease, opacity 0.3s ease; }
         .mc-count { position: absolute; bottom: 1px; right: 3px; font-size: 0.7rem; color: #fff; font-weight: bold; text-shadow: 1.5px 1.5px 0 #000; pointer-events: none; }
-        .craft-layout { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        
+        .craft-layout { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
         .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
         .craft-arrow { font-size: 1.2rem; color: #8a9bb4; text-align: center; }
+        
+        /* КНОПКА СПРАВОЧНИКА "I" И СПИСОК */
+        #craft-header-row { display: flex; justify-content: center; align-items: center; gap: 10px; position: relative; width: 100%; }
+        #btn-recipe-book { background: #1e222b; color: #00d2d3; border: 1px solid #00d2d3; border-radius: 4px; width: 26px; height: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        #recipe-book-modal { display: none; background: #1a1e26; border: 1px solid #232b38; padding: 8px; border-radius: 6px; flex-direction: column; gap: 5px; width: 100%; max-height: 150px; overflow-y: auto; }
+        .recipe-book-row { display: flex; justify-content: space-between; align-items: center; background: #232b38; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
+
         .shop-row, .up-card { display: flex; align-items: center; justify-content: space-between; background: #1a1e26; padding: 6px; border-radius: 5px; border: 1px solid #232b38; }
         .btn-action { background: #2ed573; color: #000; border: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
         #roulette-container { width: 100%; height: 60px; background: #07080a; border: 2px solid #ffa502; position: relative; overflow: hidden; border-radius: 4px; display: flex; align-items: center; }
@@ -62,7 +84,7 @@
 <body>
     <div id="fullscreen-overlay">
         <h1>SOUL COMMAND</h1>
-        <p style="color: #8a9bb4; margin-bottom: 15px; font-size: 0.85rem;">Адаптация игрового разрешения под мобильный дисплей</p>
+        <p style="color: #8a9bb4; margin-bottom: 15px; font-size: 0.85rem;">Адаптация игрового разрешения под mobile дисплей</p>
         <button id="fullscreen-btn">НАЧАТЬ</button>
     </div>
 
@@ -81,11 +103,29 @@
 
         <div id="main-content">
             <div id="timers-panel"></div>
+            
+            <div id="streak-display">Серия: <span id="streak-count">0</span> (+0.0% Лут)</div>
+            
+            <div id="boss-ui">
+                <div style="color:#ff4757; font-weight:bold; font-size:0.85rem;">⚠️ АТАКА БОССА ⚠️</div>
+                <div style="font-size:0.75rem; color:#fff;">Кликните серию 200 раз подряд!</div>
+                <div style="font-size:0.8rem; color:#eccc68; font-weight:bold;">Времени осталось: <span id="boss-timer">10:00</span></div>
+            </div>
+
             <div id="tap-wrapper">
                 <div id="tap-area">TAP</div>
+                <div id="boss-graphics">
+                    <svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M12 2L2 22h20Z" fill="#ff4757"/><circle cx="12" cy="13" r="3" fill="#000"/><circle cx="12" cy="13" r="1" fill="#fff"/></svg>
+                </div>
             </div>
+
             <div id="log-container">
                 <div class="log-line log-sys">Система: Добро пожаловать! Зарегистрируйте аккаунт командой: /reg &lt;имя&gt;</div>
+            </div>
+
+            <div id="screen-dialog" class="sub-screen">
+                <div id="dialog-text">Сообщение босса...</div>
+                <button class="btn-action" id="btn-dialog-next" style="background:#ff4757; color:#fff; width:120px; margin:0 auto;">Далее</button>
             </div>
 
             <div id="screen-inv" class="sub-screen">
@@ -94,7 +134,13 @@
             </div>
 
             <div id="screen-craft" class="sub-screen">
-                <h3>КРАФТ ВЕРСТАК 3х3</h3>
+                <div id="craft-header-row">
+                    <h3>КРАФТ ВЕРСТАК 3х3</h3>
+                    <button id="btn-recipe-book" title="Справочник рецептов">I</button>
+                </div>
+                
+                <div id="recipe-book-modal"></div>
+
                 <div class="craft-layout">
                     <div class="grid-3x3" id="craft-matrix"></div>
                     <div class="craft-arrow">⬇ РЕЗУЛЬТАТ СБОРКИ ⬇</div>
@@ -166,21 +212,22 @@
             "Ключ от кейса": `<svg viewBox="0 0 24 24"><path d="M6 13a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm4-3.5h9v2h-2v2h-1.5v-2h-5.5v-2z" fill="#eccc68"/></svg>`,
             "Амулет Души": `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="#20bf6b" stroke="#26de81" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="#ffb8b8"/></svg>`,
             "Бустер Клика (Базовый)": `<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke="#ff4757" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#ff6b81"/></svg>`,
-            "Бустер Удачи (Базовый)": `<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke="#2ed573" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#7bed9f"/></svg>`,
+            "Бустер Удачи (Базовый) animate": `<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke="#2ed573" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#7bed9f"/></svg>`,
             "Бустер Клика (Улучшенный X)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#ff4757"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">X</text></svg>`,
             "Бустер Клика (Улучшенный Время)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#ff6b81"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">T</text></svg>`,
             "Бустер Удачи (Улучшенный X)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#2ed573"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">X</text></svg>`,
             "Бустер Удачи (Улучшенный Время)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#7bed9f"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">T</text></svg>`,
-            "Секретный Меч": `<svg viewBox="0 0 24 24"><path d="M19 2l3 3L7 20l-3 2 2-3z" fill="#ff4757" stroke="#fff" stroke-width="1.5"/></svg>`
+            "Секретный Меч": `<svg viewBox="0 0 24 24"><path d="M19 2l3 3L7 20l-3 2 2-3z" fill="#ff4757" stroke="#fff" stroke-width="1.5"/></svg>`,
+            "Предмет Буст X2 (HOCK)": `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#2ed573"/><text x="6" y="15" font-weight="bold" fill="#000" font-size="10">X2</text></svg>`
         };
 
         const PRICES = {
             "Железо": { buy: 15, sell: 5 }, "Магическая пыль": { buy: 30, sell: 10 }, "Осколок Души": { buy: 100, sell: 35 },
             "Ключ от кейса": { buy: 200, sell: 70 }, "Амулет Души": { buy: 500, sell: 150 },
-            "Бустер Клика (Базовый)": { buy: 150, sell: 40 }, "Бустер Удачи (Базовый)": { buy: 150, sell: 40 },
+            "Бустер Клика (Базовый)": { buy: 150, sell: 40 }, "Бустер Удачи (Базовый) animate": { buy: 150, sell: 40 },
             "Бустер Клика (Улучшенный X)": { buy: 400, sell: 120 }, "Бустер Клика (Улучшенный Время)": { buy: 400, sell: 120 },
             "Бустер Удачи (Улучшенный X)": { buy: 400, sell: 120 }, "Бустер Удачи (Улучшенный Время)": { buy: 400, sell: 120 },
-            "Секретный Меч": { buy: 9999, sell: 1500 }
+            "Секретный Меч": { buy: 9999, sell: 1500 }, "Предмет Буст X2 (HOCK)": { buy: 300, sell: 50 }
         };
 
         let state = {
@@ -190,8 +237,11 @@
             inv: {},
             matrix: Array(9).fill(null),
             selectedInvItem: null,
-            promos: { school: false },
-            activeBuffs: []
+            promos: { school: false, hock: false, egor: false },
+            activeBuffs: [],
+            dailyStreak: 0,
+            lastStreakDay: null,
+            debuffActive: false
         };
 
         for (let item in SVGS) { state.inv[item] = 0; }
@@ -201,7 +251,7 @@
             { cmd: "/craft", hint: "/craft (Верстак 3х3)" }, { cmd: "/cases", hint: "/cases (Кейсы)" },
             { cmd: "/shop", hint: "/shop (Магазин)" }, { cmd: "/up", hint: "/up (Прокачка)" },
             { cmd: "/help", hint: "/help (Справка)" }, { cmd: "/event", hint: "/event (Заблокировано)" },
-            { cmd: "/reg", hint: "/reg <name>" }
+            { cmd: "/reg", hint: "/reg <name>" }, { cmd: "/fire", hint: "/fire (Серия заходов)" }
         ];
 
         const overlay = document.getElementById('fullscreen-overlay');
@@ -221,23 +271,44 @@
         }
     </script>
     <script>
+        // ЛОГИКА СЕРИИ ТАПОВ И БОСС СЕЙВА
+        let tapStreak = 0;
+        let lastTapTime = 0;
+        let streakTimer = null;
+
+        // ЛОГИКА БОССА И ИСПЫТАНИЙ ЗАХОДА
+        let bossActive = false;
+        let bossClicks = 0;
+        let bossTimeLeft = 600; 
+        let bossInterval = null;
+
+        let fireChallengeActive = false;
+        let fireChallengeCoins = 0;
+        let fireChallengeTimeLeft = 10;
+        let fireChallengeInterval = null;
+
         function saveGame() {
-            localStorage.setItem('soul_command_save_v2', JSON.stringify({
+            localStorage.setItem('soul_command_save_v3_2026', JSON.stringify({
                 user: state.user, coins: state.coins, crystals: state.crystals,
-                stats: state.stats, inv: state.inv, promos: state.promos
+                stats: state.stats, inv: state.inv, promos: state.promos,
+                dailyStreak: state.dailyStreak, lastStreakDay: state.lastStreakDay,
+                debuffActive: state.debuffActive
             }));
         }
 
         function loadGame() {
-            let data = localStorage.getItem('soul_command_save_v2');
+            let data = localStorage.getItem('soul_command_save_v3_2026');
             if (data) {
                 let parsed = JSON.parse(data);
-                state.user = parsed.user || state.user;
-                state.coins = parsed.coins || 0;
-                state.crystals = parsed.crystals || 0;
-                state.stats = parsed.stats || state.stats;
-                state.promos = parsed.promos || state.promos;
-                if (parsed.inv) { for(let k in parsed.inv) state.inv[k] = parsed.inv[k]; }
+                if (parsed.user) state.user = parsed.user;
+                state.coins = Number(parsed.coins) || 0;
+                state.crystals = Number(parsed.crystals) || 0;
+                if (parsed.stats) state.stats = parsed.stats;
+                if (parsed.promos) state.promos = parsed.promos;
+                state.dailyStreak = Number(parsed.dailyStreak) || 0;
+                state.lastStreakDay = parsed.lastStreakDay || null;
+                state.debuffActive = !!parsed.debuffActive;
+                if (parsed.inv) { for(let k in parsed.inv) state.inv[k] = Number(parsed.inv[k]) || 0; }
             }
         }
 
@@ -245,38 +316,90 @@
             document.getElementById('ui-username').innerText = "Игрок: " + state.user.name;
             document.getElementById('val-coins').innerText = Math.floor(state.coins);
             document.getElementById('val-crystals').innerText = Math.floor(state.crystals);
-            document.getElementById('lvl-tap').innerText = state.stats.tapLvl;
-            document.getElementById('cost-tap').innerText = state.stats.tapLvl * 50;
-            document.getElementById('lvl-luck').innerText = state.stats.luckLvl;
-            document.getElementById('cost-luck').innerText = state.stats.luckLvl * 100;
+            document.getElementById('lvl-tap').innerText = state.stats.tapLvl || 1;
+            document.getElementById('cost-tap').innerText = (state.stats.tapLvl || 1) * 50;
+            document.getElementById('lvl-luck').innerText = state.stats.luckLvl || 1;
+            document.getElementById('cost-luck').innerText = (state.stats.luckLvl || 1) * 100;
             renderAllGrids();
             saveGame();
         }
 
-        function hideAllScreens() { document.querySelectorAll('.sub-screen').forEach(s => s.classList.remove('active')); }
+        function hideAllScreens() { 
+            document.querySelectorAll('.sub-screen').forEach(s => s.classList.remove('active')); 
+            document.getElementById('screen-dialog').style.display = 'none';
+        }
 
         document.getElementById('tap-area').addEventListener('click', () => {
             if (!state.user.reg) { pushLog("Ошибка: Пройдите регистрацию через /reg <имя>", "log-err"); return; }
-            let clickPower = state.stats.tapLvl;
+            
+            // Если активно испытание /fire
+            if (fireChallengeActive) {
+                fireChallengeCoins += 5; // Упрощенный клик для испытания заходов
+                if (fireChallengeCoins >= 100) {
+                    endFireChallenge(true);
+                }
+                return;
+            }
+
+            // Если идет битва с боссом
+            if (bossActive) {
+                bossClicks++;
+                pushLog(`Удар по Боссу! Серия ударов: ${bossClicks}/200`, "log-err");
+                if (bossClicks >= 200) {
+                    endBossBattle(true);
+                }
+                return;
+            }
+
+            // ЛОГИКА СЕРИИ ТАПОВ (Пункт 5)
+            let now = Date.now();
+            if (now - lastTapTime <= 5000) {
+                tapStreak++;
+            } else {
+                tapStreak = 1;
+            }
+            lastTapTime = now;
+            
+            document.getElementById('streak-display').style.display = 'block';
+            let luckBonusPercent = (tapStreak * 0.0005 * 100).toFixed(3);
+            document.getElementById('streak-count').innerText = `${tapStreak} (+${luckBonusPercent}% Лут)`;
+
+            clearTimeout(streakTimer);
+            streakTimer = setTimeout(() => {
+                tapStreak = 0;
+                document.getElementById('streak-display').style.display = 'none';
+                pushLog("Серия тапов потеряна (прошло 5 секунд без кликов).", "log-sys");
+            }, 5000);
+
+            // Базовый расчет монет
+            let clickPower = Number(state.stats.tapLvl) || 1;
+            if (state.debuffActive) clickPower *= 0.25; // Дебафф босса
+
             let schoolBuff = state.activeBuffs.find(b => b.id === 'school');
+            let hockBuff = state.activeBuffs.find(b => b.id === 'b_hock');
             let clickBuffX = state.activeBuffs.find(b => b.id === 'b_click_x');
             let clickBuffT = state.activeBuffs.find(b => b.id === 'b_click_t');
 
             if (schoolBuff) clickPower *= 3.5;
+            if (hockBuff) clickPower *= 2;
             if (clickBuffX) clickPower *= 5;
             if (clickBuffT) clickPower *= 2;
-            if (!clickBuffX && !clickBuffT && state.activeBuffs.find(b => b.type === 'click_base')) clickPower *= 2;
 
-            clickPower += (state.inv["Амулет Души"] || 0) * 1;
+            clickPower += (Number(state.inv["Амулет Души"]) || 0) * 1;
             state.coins += clickPower;
             let logMsg = `Тап! Монеты: +${clickPower.toFixed(1)}.`;
 
-            let baseLuck = 0.05 + (state.stats.luckLvl - 1) * 0.01;
+            // Шанс лута
+            let baseLuck = 0.05 + ((Number(state.stats.luckLvl) || 1) - 1) * 0.01;
+            if (state.debuffActive) baseLuck *= 0.25; // Дебафф босса
+            
+            // Бонус серии тапов
+            baseLuck += (tapStreak * 0.0005);
+
             if (schoolBuff) baseLuck *= 3;
             if (state.activeBuffs.find(b => b.id === 'b_luck_x')) baseLuck *= 3;
             if (state.activeBuffs.find(b => b.id === 'b_luck_t')) baseLuck *= 1.5;
-            if (state.activeBuffs.find(b => b.type === 'luck_base')) baseLuck *= 1.5;
-            baseLuck += (state.inv["Амулет Души"] || 0) * 0.10;
+            baseLuck += (Number(state.inv["Амулет Души"]) || 0) * 0.10;
 
             if (Math.random() <= baseLuck) {
                 let rnd = Math.random();
@@ -313,15 +436,26 @@
         });
     </script>
     <script>
+        // Сюжетные реплики Босса
+        const bossDialogs = [
+            "как ты посмел попытаться меня взломать?",
+            "я тебя прикончу!"
+        ];
+        let currentDialogIndex = 0;
+
         function executeCommand(str) {
             if (!str.startsWith('/')) { pushLog("Ошибка: Команды начинаются с '/'", "log-err"); return; }
-            let parts = str.split(' '); let head = parts[0].toLowerCase(); let args = parts.slice(1).join(' ');
+            let parts = str.split(' '); 
+            let head = parts[0].toLowerCase(); 
+            let args = parts.slice(1).join(' ');
+
             if (head === '/reg') {
                 if (state.user.reg) { pushLog(`Вы уже зарегистрированы под именем ${state.user.name}`, "log-err"); return; }
                 if (!args) { pushLog("Укажите имя!", "log-err"); return; }
                 state.user.name = args; state.user.reg = true; pushLog(`Успешная регистрация, ${state.user.name}!`, "log-suc"); syncUI(); return;
             }
             if (!state.user.reg) { pushLog("Зарегистрируйтесь через /reg <имя>", "log-err"); return; }
+
             switch(head) {
                 case '/home': hideAllScreens(); pushLog("Экран кликов активирован.", "log-sys"); break;
                 case '/inv': hideAllScreens(); document.getElementById('screen-inv').classList.add('active'); pushLog("Просмотр инвентаря.", "log-sys"); break;
@@ -332,17 +466,169 @@
                 case '/school':
                     if (state.promos.school) { pushLog("Промокод уже был активирован!", "log-err"); return; }
                     state.promos.school = true; activateBuff('school', 'Промо-Буст', 300); pushLog("X3.5 к кликам и X3 к удаче на 5 минут активированы!", "log-suc"); break;
-                case '/help': pushLog("Доступно: /inv, /craft, /shop, /cases, /up, /home", "log-sys"); break;
+                
+                // НОВЫЕ КОМАНДЫ (Пункты 2, 3, 6, 7)
+                case '/egor':
+                    if (state.promos.egor) { pushLog("Вы уже получали бонус от /egor!", "log-err"); return; }
+                    state.promos.egor = true; state.crystals += 85; pushLog("Команда принята! Зачислено 85 кристаллов.", "log-suc"); break;
+                case '/promo':
+                    if (args.toUpperCase() === 'HOCK') {
+                        if (state.promos.hock) { pushLog("Промокод HOCK уже использован!", "log-err"); return; }
+                        state.promos.hock = true; state.inv["Предмет Буст X2 (HOCK)"]++; pushLog("Выдан ПРЕДМЕТ: [Буст X2 (HOCK)]! Активируйте в /inv.", "log-suc");
+                    } else { pushLog("Неизвестный промокод.", "log-err"); }
+                    break;
+                case '/fire':
+                    triggerFireCheck(); break;
+                case '/hack':
+                    startBossSequence(); break;
+
+                case '/help': pushLog("Доступно: /inv, /craft, /shop, /cases, /up, /home, /fire", "log-sys"); break;
                 default: pushLog("Неизвестная команда. См. /help", "log-err");
             }
             syncUI();
         }
 
-        function upgradeStat(type) {
-            if (type === 'tap') { let cost = state.stats.tapLvl * 50; if (state.coins >= cost) { state.coins -= cost; state.stats.tapLvl++; pushLog(`Сила тапа повышена!`, "log-suc"); } else { pushLog("Недостаточно монет!", "log-err"); } }
-            if (type === 'luck') { let cost = state.stats.luckLvl * 100; if (state.coins >= cost) { state.coins -= cost; state.stats.luckLvl++; pushLog(`Удача повышена!`, "log-suc"); } else { pushLog("Недостаточно монет!", "log-err"); } }
+        // ЛОГИКА ДИАЛОГА И СТАРТА БОССА
+        function startBossSequence() {
+            hideAllScreens();
+            currentDialogIndex = 0;
+            document.getElementById('screen-dialog').style.display = 'flex';
+            document.getElementById('dialog-text').innerText = bossDialogs[currentDialogIndex];
+        }
+
+        document.getElementById('btn-dialog-next').addEventListener('click', () => {
+            currentDialogIndex++;
+            if (currentDialogIndex < bossDialogs.length) {
+                document.getElementById('dialog-text').innerText = bossDialogs[currentDialogIndex];
+            } else {
+                // Окончание диалога -> Старт битвы
+                document.getElementById('screen-dialog').style.display = 'none';
+                initiateBossFight();
+            }
+        });
+
+        function initiateBossFight() {
+            bossActive = true;
+            bossClicks = 0;
+            bossTimeLeft = 600;
+            document.getElementById('boss-ui').style.display = 'flex';
+            document.getElementById('boss-graphics').style.display = 'block';
+            pushLog("БОСС ПОЯВИЛСЯ! Сделайте серию в 200 кликов без ошибок, пока тикает таймер!", "log-err");
+
+            clearInterval(bossInterval);
+            bossInterval = setInterval(() => {
+                bossTimeLeft--;
+                let mins = Math.floor(bossTimeLeft / 60);
+                let secs = bossTimeLeft % 60;
+                document.getElementById('boss-timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                
+                if (bossTimeLeft <= 0) {
+                    endBossBattle(false);
+                }
+            }, 1000);
+        }
+
+        function endBossBattle(win) {
+            clearInterval(bossInterval);
+            bossActive = false;
+            document.getElementById('boss-ui').style.display = 'none';
+            document.getElementById('boss-graphics').style.display = 'none';
+
+            if (win) {
+                state.crystals += 200;
+                state.coins += 2000;
+                state.debuffActive = false;
+                pushLog("ПОБЕДА НАД БОССОМ! Получено 200 кристаллов и 2000 монет. Все дебаффы сняты!", "log-suc");
+            } else {
+                state.debuffActive = true;
+                pushLog("ВРЕМЯ ИСТЕКЛО! Босс наложил на вас проклятие: Удача и Сила клика снижены до X0.25!", "log-err");
+            }
             syncUI();
         }
+
+        // СЕРИЯ ЗАХОДОВ (/fire)
+        function triggerFireCheck() {
+            let today = new Date().toDateString();
+            if (state.lastStreakDay === today) {
+                pushLog("Вы уже отмечали заход сегодня!", "log-sys");
+                return;
+            }
+
+            let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            if (state.lastStreakDay === yesterday.toDateString() || state.lastStreakDay === null) {
+                // Серия продолжается
+                state.dailyStreak++;
+                state.lastStreakDay = today;
+                pushLog(`Серия заходов продолжается! День: ${state.dailyStreak}. Получите подарок при тапах!`, "log-suc");
+                syncUI();
+            } else {
+                // Серия потеряна -> Испытание восстановления (Пункт 6)
+                let cost = state.dailyStreak * 5; 
+                pushLog(`Серия заходов сорвана! Для восстановления нужно натапать 100 монет за 10 секунд! Нажмите TAP!`, "log-err");
+                startFireChallenge();
+            }
+        }
+
+        function startFireChallenge() {
+            fireChallengeActive = true;
+            fireChallengeCoins = 0;
+            fireChallengeTimeLeft = 10;
+
+            clearInterval(fireChallengeInterval);
+            fireChallengeInterval = setInterval(() => {
+                fireChallengeTimeLeft--;
+                pushLog(`[Испытание /fire] Осталось времени: ${fireChallengeTimeLeft}с. Набрано: ${fireChallengeCoins}/100`, "log-sys");
+                if (fireChallengeTimeLeft <= 0) {
+                    endFireChallenge(false);
+                }
+            }, 1000);
+        }
+
+        function endFireChallenge(success) {
+            clearInterval(fireChallengeInterval);
+            fireChallengeActive = false;
+            if (success) {
+                state.dailyStreak++;
+                state.lastStreakDay = new Date().toDateString();
+                pushLog(`Успех! Серия восстановлена. Текущий день серии: ${state.dailyStreak}`, "log-suc");
+            } else {
+                let cost = state.dailyStreak * 4; 
+                if (state.crystals >= cost) {
+                    state.crystals -= cost;
+                    state.dailyStreak = 1;
+                    state.lastStreakDay = new Date().toDateString();
+                    pushLog(`Вы провалили тайм-аут! Списано ${cost} кристаллов за авто-выкуп серии. Новый день: 1`, "log-err");
+                } else {
+                    state.dailyStreak = 0;
+                    state.lastStreakDay = null;
+                    pushLog("Недостаточно кристаллов для выкупа, серия полностью обнулена!", "log-err");
+                }
+            }
+            syncUI();
+        }
+
+        function upgradeStat(type) {
+            if (type === 'tap') { 
+                let cost = (Number(state.stats.tapLvl) || 1) * 50; 
+                if (state.coins >= cost) { state.coins -= cost; state.stats.tapLvl = (Number(state.stats.tapLvl) || 1) + 1; pushLog(`Сила тапа повышена!`, "log-suc"); } 
+                else { pushLog("Недостаточно монет!", "log-err"); } 
+            }
+            if (type === 'luck') { 
+                let cost = (Number(state.stats.luckLvl) || 1) * 100; 
+                if (state.coins >= cost) { state.coins -= cost; state.stats.luckLvl = (Number(state.stats.luckLvl) || 1) + 1; pushLog(`Удача повышена!`, "log-suc"); } 
+                else { pushLog("Недостаточно монет!", "log-err"); } 
+            }
+            syncUI();
+        }
+    </script>
+    <script>
+        // База рецептов для быстрого авто-вкладывания (Пункт 1)
+        const CRAFT_RECIPES_DATA = [
+            { result: "Ключ от кейса", ingredients: { "Железо": 5, "Магическая пыль": 2 } },
+            { result: "Амулет Души", ingredients: { "Осколок Души": 3, "Железо": 6 } },
+            { result: "Бустер Клика (Базовый)", ingredients: { "Железо": 4, "Магическая пыль": 4 } },
+            { result: "Бустер Удачи (Базовый) animate", ingredients: { "Магическая пыль": 4, "Осколок Души": 4 } }
+        ];
 
         function renderAllGrids() {
             const invBox = document.getElementById('inv-grid-box'); invBox.innerHTML = '';
@@ -351,16 +637,46 @@
             for (let name in state.inv) { if (state.inv[name] > 0) { let isSelected = state.selectedInvItem === name; let slot = createSlot(name, state.inv[name], () => { state.selectedInvItem = isSelected ? null : name; syncUI(); }); if (isSelected) slot.classList.add('selected'); craftInv.appendChild(slot); } }
             const shopSellBox = document.getElementById('shop-sell-grid'); shopSellBox.innerHTML = '';
             for (let name in state.inv) { if (state.inv[name] > 0) { shopSellBox.appendChild(createSlot(name, state.inv[name], () => { state.inv[name]--; state.coins += PRICES[name].sell; syncUI(); })); } }
+            
             const matrixBox = document.getElementById('craft-matrix'); matrixBox.innerHTML = '';
             for (let i = 0; i < 9; i++) {
                 let itemName = state.matrix[i]; let slot = document.createElement('div'); slot.className = 'mc-slot';
-                if (itemName) { slot.innerHTML = SVGS[itemName]; slot.addEventListener('click', () => { state.inv[itemName]++; state.matrix[i] = null; syncUI(); }); }
-                else { slot.addEventListener('click', () => { if (state.selectedInvItem) { state.matrix[i] = state.selectedInvItem; state.inv[state.selectedInvItem]--; if (state.inv[state.selectedInvItem] <= 0) state.selectedInvItem = null; syncUI(); } }); }
+                if (itemName) { 
+                    slot.innerHTML = SVGS[itemName]; 
+                    let svgElem = slot.querySelector('svg');
+                    if(svgElem) { svgElem.style.transform = 'scale(0.1)'; strokeOpacity = '0'; setTimeout(()=> { svgElem.style.transform='scale(1)'; svgElem.style.opacity='1'; }, 20); }
+                    slot.addEventListener('click', () => { 
+                        if(svgElem) { 
+                            svgElem.style.transform='scale(0.1)'; svgElem.style.opacity='0'; 
+                            setTimeout(() => { state.inv[itemName]++; state.matrix[i] = null; syncUI(); }, 300); 
+                        } else { state.inv[itemName]++; state.matrix[i] = null; syncUI(); }
+                    }); 
+                }
+                else { 
+                    slot.addEventListener('click', () => { 
+                        if (state.selectedInvItem) { 
+                            state.matrix[i] = state.selectedInvItem; state.inv[state.selectedInvItem]--; 
+                            if (state.inv[state.selectedInvItem] <= 0) state.selectedInvItem = null; 
+                            syncUI(); 
+                        } 
+                    }); 
+                }
                 matrixBox.appendChild(slot);
             }
             checkCraftRecipes();
+            
+            const bookBox = document.getElementById('recipe-book-modal');
+            bookBox.innerHTML = '';
+            CRAFT_RECIPES_DATA.forEach(recipe => {
+                let rRow = document.createElement('div');
+                rRow.className = 'recipe-book-row';
+                rRow.innerText = `Собрать: [${recipe.result}]`;
+                rRow.addEventListener('click', () => { autoLayoutRecipe(recipe); });
+                bookBox.appendChild(rRow);
+            });
+
             const shopBox = document.getElementById('shop-buy-list'); shopBox.innerHTML = '';
-            const buyable = ["Железо", "Магическая пыль", "Ключ от кейса", "Амулет Души", "Бустер Клика (Базовый)", "Бустер Удачи (Базовый)"];
+            const buyable = ["Железо", "Магическая пыль", "Ключ от кейса", "Амулет Души", "Бустер Клика (Базовый)", "Бустер Удачи (Базовый) animate"];
             buyable.forEach(name => {
                 let row = document.createElement('div'); row.className = 'shop-row'; row.innerHTML = `<div style="display:flex; align-items:center; gap:6px;">${SVGS[name]} <span>${name}</span></div>`;
                 let btn = document.createElement('button'); btn.className = 'btn-action'; btn.innerText = `${PRICES[name].buy} 💰`;
@@ -368,6 +684,24 @@
                 row.appendChild(btn); shopBox.appendChild(row);
             });
         }
+
+        function autoLayoutRecipe(recipe) {
+            for (let i = 0; i < 9; i++) { if (state.matrix[i]) { state.inv[state.matrix[i]]++; state.matrix[i] = null; } }
+            let reqs = { ...recipe.ingredients }; let slotIndex = 0;
+            for (let item in reqs) {
+                let countToPlace = reqs[item];
+                while (countToPlace > 0 && state.inv[item] > 0 && slotIndex < 9) {
+                    state.matrix[slotIndex] = item; state.inv[item]--; countToPlace--; slotIndex++;
+                }
+            }
+            pushLog(`Авто-выкладка рецепта [${recipe.result}] выполнена! Что было — выставлено.`, "log-sys");
+            syncUI();
+        }
+
+        let bookOpen = false;
+        document.getElementById('btn-recipe-book').addEventListener('click', () => {
+            bookOpen = !bookOpen; document.getElementById('recipe-book-modal').style.display = bookOpen ? 'flex' : 'none';
+        });
 
         function createSlot(name, count, clickFn) { let slot = document.createElement('div'); slot.className = 'mc-slot'; slot.innerHTML = SVGS[name] + `<div class="mc-count">${count}</div>`; slot.addEventListener('click', clickFn); return slot; }
     </script>
@@ -379,9 +713,9 @@
             if (counts["Железо"] === 5 && counts["Магическая пыль"] === 2 && total === 7) currentCraftResult = "Ключ от кейса";
             else if (counts["Осколок Души"] === 3 && counts["Железо"] === 6 && total === 9) currentCraftResult = "Амулет Души";
             else if (counts["Железо"] === 4 && counts["Магическая пыль"] === 4 && total === 8) currentCraftResult = "Бустер Клика (Базовый)";
-            else if (counts["Магическая пыль"] === 4 && counts["Осколок Души"] === 4 && total === 8) currentCraftResult = "Бустер Удачи (Базовый)";
-            else if (counts["Магическая пыль"] === 5 && counts["Железо"] === 3 && total === 9) { if (counts["Бустер Клика (Базовый)"] === 1) currentCraftResult = "Бустер Клика (Улучшенный X)"; if (counts["Бустер Удачи (Базовый)"] === 1) currentCraftResult = "Бустер Удачи (Улучшенный X)"; }
-            else if (counts["Магическая пыль"] === 3 && counts["Железо"] === 5 && total === 9) { if (counts["Бустер Клика (Базовый)"] === 1) currentCraftResult = "Бустер Клика (Улучшенный Время)"; if (counts["Бустер Удачи (Базовый)"] === 1) currentCraftResult = "Бустер Удачи (Улучшенный Время)"; }
+            else if (counts["Магическая пыль"] === 4 && counts["Осколок Души"] === 4 && total === 8) currentCraftResult = "Бустер Удачи (Базовый) animate";
+            else if (counts["Магическая пыль"] === 5 && counts["Железо"] === 3 && total === 9) { if (counts["Бустер Клика (Базовый)"] === 1) currentCraftResult = "Бустер Клика (Улучшенный X)"; if (counts["Бустер Удачи (Базовый) animate"] === 1) currentCraftResult = "Бустер Удачи (Улучшенный X)"; }
+            else if (counts["Магическая пыль"] === 3 && counts["Железо"] === 5 && total === 9) { if (counts["Бустер Клика (Базовый)"] === 1) currentCraftResult = "Бустер Клика (Улучшенный Время)"; if (counts["Бустер Удачи (Базовый) animate"] === 1) currentCraftResult = "Бустер Удачи (Улучшенный Время)"; }
             else if (counts["Осколок Души"] === 5 && counts["Амулет Души"] === 2 && total === 7) currentCraftResult = "Секретный Меч";
             if (currentCraftResult) outSlot.innerHTML = SVGS[currentCraftResult];
         }
@@ -392,19 +726,21 @@
         function openContext(name) {
             activeContextItem = name; document.getElementById('context-item-title').innerText = name;
             let pBtn = document.getElementById('ctx-btn-primary'); document.getElementById('ctx-btn-sell').innerText = `Продать за ${PRICES[name].sell} 💰`;
-            if (name.startsWith("Бустер")) { pBtn.innerText = "Активировать эффект"; pBtn.onclick = () => { useBoosterItem(name); closeContext(); }; }
+            if (name.startsWith("Бустер") || name.startsWith("Предмет")) { pBtn.innerText = "Активировать эффект"; pBtn.onclick = () => { useBoosterItem(name); closeContext(); }; }
             else { pBtn.innerText = "Отправить в Верстак"; pBtn.onclick = () => { state.selectedInvItem = name; hideAllScreens(); document.getElementById('screen-craft').classList.add('active'); closeContext(); syncUI(); }; }
             document.getElementById('context-modal').style.display = 'flex';
         }
         function closeContext() { document.getElementById('context-modal').style.display = 'none'; }
 
-        document.getElementById('ctx-btn-sell').addEventListener('click', () => { if (activeContextItem && state.inv[activeContextItem] > 0) { state.inv[activeContextItem]--; state.coins += PRICES[activeContextItem].sell; closeContext(); syncUI(); } });
+        document.getElementById('ctx-btn-sell').addEventListener('click', () => { if (activeContextItem && state.inv[activeContextItem] > 0) { activeContextItem && state.inv[activeContextItem]--; state.coins += PRICES[activeContextItem].sell; closeContext(); syncUI(); } });
         document.getElementById('btn-shop-sellall').addEventListener('click', () => { for (let name in state.inv) { if (name !== "Секретный Меч" && state.inv[name] > 0) { state.coins += state.inv[name] * PRICES[name].sell; state.inv[name] = 0; } } syncUI(); });
 
         function useBoosterItem(name) {
-            if (state.inv[name] <= 0) return; state.inv[name]--; let duration = 60; if (name.includes("Улучшенный Время")) duration = 180;
+            if (state.inv[name] <= 0) return; state.inv[name]--; 
+            let duration = 60; if (name.includes("Улучшенный Время")) duration = 180; if (name.includes("HOCK")) duration = 120;
             if (name.includes("Клика")) { let type = name.includes("Улучшенный X") ? 'b_click_x' : (name.includes("Улучшенный Время") ? 'b_click_t' : 'click_base'); activateBuff(type, name, duration); }
             else if (name.includes("Удачи")) { let type = name.includes("Улучшенный X") ? 'b_luck_x' : (name.includes("Улучшенный Время") ? 'b_luck_t' : 'luck_base'); activateBuff(type, name, duration); }
+            else if (name.includes("HOCK")) { activateBuff('b_hock', name, duration); }
             syncUI();
         }
         function activateBuff(id, title, duration) { state.activeBuffs = state.activeBuffs.filter(b => b.id !== id); state.activeBuffs.push({ id: id, title: title, left: duration }); renderBuffTimers(); }
