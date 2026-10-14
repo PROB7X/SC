@@ -2,545 +2,428 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SOUL COMMAND</title>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            width: 100%;
-            height: 100dvh;
-            overflow: hidden;
-            background-color: #0d0f12;
-            font-family: 'Courier New', Courier, monospace;
-            color: #e0e6ed;
-            position: relative;
-        }
-        
-        /* Экран блокировки */
-        #fullscreen-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(13, 15, 18, 0.98);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            text-align: center;
-            padding: 20px;
-        }
-        #fullscreen-overlay h1 {
-            color: #ff3e3e;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(255, 62, 62, 0.5);
-        }
-        #fullscreen-btn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            background: #242933;
-            color: #00ffcc;
-            border: 2px solid #00ffcc;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
-            transition: 0.3s;
-        }
-
-        /* Главный контейнер */
-        #game-container {
-            display: flex;
-            flex-direction: column;
-            height: 100dvh;
-            width: 100%;
-            position: relative;
-        }
-
-        /* Панель ресурсов смещена вниз (из-за выреза/камеры) */
-        #top-bar {
-            background: #1a1f29;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-top: 45px; /* Смещение ниже выреза камеры */
-            padding: 12px 5px;
-            border-bottom: 3px solid #242933;
-            font-size: 0.85rem;
-            font-weight: bold;
-            z-index: 10;
-        }
-        .stat { color: #ffcc00; }
-        .stat.crystals { color: #00e5ff; }
-        .stat.player-name { color: #a3e7fc; }
-
-        /* Игровые экраны */
-        .screen-container {
-            flex: 1;
-            overflow-y: auto;
-            position: relative;
-        }
-        .screen {
-            display: none;
-            padding: 20px;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-        }
-        .screen.active {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Кнопка тапалки */
-        #tap-area {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #3a4454 0%, #1a1f29 100%);
-            border: 4px solid #ff3e3e;
-            box-shadow: 0 0 30px rgba(255, 62, 62, 0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.05s ease;
-            margin-bottom: 15px;
-        }
-        #tap-area:active {
-            transform: scale(0.95);
-            border-color: #00ffcc;
-        }
-
-        /* Лог системы */
-        .log-box {
-            background: #141822;
-            border: 1px solid #242933;
-            width: 95%;
-            max-width: 500px;
-            height: 120px;
-            overflow-y: auto;
-            padding: 10px;
-            font-size: 0.8rem;
-            text-align: left;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-        .log-entry { margin-bottom: 4px; }
-        .log-drop { color: #00ffcc; }
-        .log-error { color: #ff3e3e; }
-        .log-system { color: #ffcc00; }
-
-        /* Майнкрафт Инвентарь */
-        .mc-inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            background: #8b8b8b;
-            padding: 12px;
-            border: 4px solid #373737;
-            border-right-color: #fff;
-            border-bottom-color: #fff;
-            box-shadow: inset -4px -4px 0 #555, inset 4px 4px 0 #dbdbdb;
-            margin-top: 15px;
-            max-width: 320px;
-        }
-        .mc-slot {
-            width: 72px;
-            height: 72px;
-            background: #8b8b8b;
-            border: 4px solid #373737;
-            border-top-color: #555;
-            border-left-color: #555;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: inset 2px 2px 0 rgba(0,0,0,0.4);
-        }
-        .mc-slot svg {
-            width: 42px;
-            height: 42px;
-        }
-        .mc-count {
-            position: absolute;
-            bottom: 4px;
-            right: 6px;
-            color: #fff;
-            font-size: 0.85rem;
-            font-family: inherit;
-            text-shadow: 2px 2px 0 #000;
-            font-weight: bold;
-        }
-
-        /* Консольный блок */
-        #console-wrapper {
-            background: #0d0f12;
-            border-top: 2px solid #ff3e3e;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
-        }
-        #console-wrapper.collapsed {
-            transform: translateY(calc(100% - 30px));
-        }
-
-        /* Переключатель сворачивания */
-        #console-toggle {
-            height: 30px;
-            background: #1a1f29;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: #ff3e3e;
-            border-bottom: 1px solid #242933;
-        }
-
-        /* Подсказки */
-        #hints-container {
-            background: #161a22;
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            gap: 8px;
-            overflow-x: auto;
-            white-space: nowrap;
-            height: 35px;
-        }
-        .hint-badge {
-            background: #242933;
-            color: #00ffcc;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-
-        /* Строка ввода */
-        #command-bar {
-            display: flex;
-            align-items: center;
-            height: 45px;
-            background: #0d0f12;
-        }
-        #cmd-prefix {
-            padding-left: 15px;
-            color: #ff3e3e;
-            font-weight: bold;
-        }
-        #cmd-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #00ffcc;
-            padding: 10px;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-        }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100dvh; overflow: hidden; background-color: #0d0e12; font-family: 'Courier New', Courier, monospace; color: #e2e8f0; }
+        #fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d0e12; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 99999; text-align: center; padding: 20px; }
+        #fullscreen-overlay h1 { color: #ff4757; margin-bottom: 15px; text-shadow: 0 0 15px rgba(255, 71, 87, 0.4); font-size: 2.2rem; }
+        #fullscreen-btn { padding: 12px 35px; font-size: 1.1rem; background: #1e222b; color: #2ed573; border: 2px solid #2ed573; cursor: pointer; border-radius: 6px; font-weight: bold; box-shadow: 0 0 15px rgba(46, 213, 115, 0.2); }
+        #game-container { display: flex; flex-direction: column; height: 100dvh; width: 100vw; position: relative; }
+        #top-bar { margin-top: 50px; background: #151821; height: 46px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #232b38; padding: 0 10px; z-index: 10; }
+        .user-tag { font-size: 0.8rem; color: #8a9bb4; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .currency-box { display: flex; align-items: center; gap: 5px; font-size: 1rem; font-weight: bold; }
+        .currency-box svg { width: 20px; height: 20px; }
+        #stat-coins { color: #ffa502; }
+        #stat-crystals { color: #00d2d3; }
+        #main-content { flex: 1; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; gap: 12px; align-items: center; }
+        #timers-panel { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+        .timer-badge { background: rgba(255, 71, 87, 0.12); border: 1px solid #ff4757; color: #ff4757; padding: 3px 6px; font-size: 0.7rem; border-radius: 4px; text-align: center; }
+        #tap-wrapper { display: flex; justify-content: center; align-items: center; margin: 5px 0; }
+        #tap-area { width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, #2f3542 0%, #1e222b 100%); border: 4px solid #ff4757; box-shadow: 0 0 20px rgba(255, 71, 87, 0.25); display: flex; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: bold; color: #fff; transition: transform 0.05s ease; }
+        #tap-area:active { transform: scale(0.93); border-color: #2ed573; box-shadow: 0 0 20px rgba(46, 213, 115, 0.35); }
+        #log-container { width: 100%; background: #07080a; border: 2px solid #232b38; border-radius: 6px; flex: 1; min-height: 110px; max-height: 170px; overflow-y: auto; padding: 8px; font-size: 0.75rem; }
+        .log-line { margin-bottom: 4px; line-height: 1.2; }
+        .log-err { color: #ff4757; }
+        .log-suc { color: #2ed573; }
+        .log-sys { color: #eccc68; }
+        .sub-screen { width: 100%; background: #141720; border: 2px solid #232b38; border-radius: 8px; padding: 10px; display: none; flex-direction: column; gap: 8px; }
+        .sub-screen.active { display: flex; }
+        .sub-screen h3 { text-align: center; font-size: 0.95rem; color: #ff4757; border-bottom: 1px solid #232b38; padding-bottom: 4px; }
+        .mc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; justify-content: center; }
+        .mc-slot { width: 58px; height: 58px; background: #8b8b8b; border-top: 3px solid #373737; border-left: 3px solid #373737; border-bottom: 3px solid #fff; border-right: 3px solid #fff; position: relative; display: flex; justify-content: center; align-items: center; }
+        .mc-slot:active { background: #b2b2b2; }
+        .mc-slot.selected { border: 3px solid #2ed573 !important; background: #444; }
+        .mc-slot svg { width: 34px; height: 34px; pointer-events: none; }
+        .mc-count { position: absolute; bottom: 1px; right: 3px; font-size: 0.7rem; color: #fff; font-weight: bold; text-shadow: 1.5px 1.5px 0 #000; pointer-events: none; }
+        .craft-layout { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .craft-arrow { font-size: 1.2rem; color: #8a9bb4; text-align: center; }
+        .shop-row, .up-card { display: flex; align-items: center; justify-content: space-between; background: #1a1e26; padding: 6px; border-radius: 5px; border: 1px solid #232b38; }
+        .btn-action { background: #2ed573; color: #000; border: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+        #roulette-container { width: 100%; height: 60px; background: #07080a; border: 2px solid #ffa502; position: relative; overflow: hidden; border-radius: 4px; display: flex; align-items: center; }
+        #roulette-track { display: flex; position: absolute; left: 0; top: 0; height: 100%; align-items: center; gap: 8px; padding: 0 40px; transition: transform 0s cubic-bezier(0.1, 0.8, 0.1, 1); }
+        .roulette-item { width: 44px; height: 44px; background: #1a1e26; border: 2px solid #232b38; display: flex; justify-content: center; align-items: center; border-radius: 4px; flex-shrink: 0; }
+        #roulette-marker { position: absolute; left: 50%; top: 0; width: 4px; height: 100%; background: #ff4757; transform: translateX(-50%); z-index: 5; }
+        #context-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 10000; }
+        .context-box { background: #141720; border: 2px solid #ff4757; border-radius: 8px; padding: 15px; width: 240px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+        .context-btn { padding: 8px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        #console-wrapper { background: #141720; border-top: 2px solid #ff4757; display: flex; flex-direction: column; z-index: 999; }
+        #toggle-console-btn { background: #1a1e26; color: #8a9bb4; text-align: center; font-size: 0.65rem; padding: 5px 0; cursor: pointer; font-weight: bold; }
+        #hints-bar { display: flex; gap: 6px; padding: 5px 8px; background: #07080a; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #232b38; }
+        #hints-bar::-webkit-scrollbar { display: none; }
+        .hint-tab { background: #1a1e26; color: #00d2d3; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; border: 1px solid #232b38; }
+        #input-row { display: flex; align-items: center; padding: 8px; background: #141720; }
+        #cmd-symbol { color: #ff4757; font-weight: bold; margin-right: 6px; font-size: 1rem; }
+        #cmd-input { flex: 1; background: transparent; border: none; outline: none; color: #00d2d3; font-family: inherit; font-size: 0.95rem; }
     </style>
 </head>
 <body>
-
     <div id="fullscreen-overlay">
         <h1>SOUL COMMAND</h1>
-        <p style="margin-bottom: 20px; color: #a3e7fc;">Требуется полноэкранный вертикальный режим</p>
-        <button id="fullscreen-btn">НА ВЕСЬ ЭКРАН</button>
+        <p style="color: #8a9bb4; margin-bottom: 15px; font-size: 0.85rem;">Адаптация игрового разрешения под мобильный дисплей</p>
+        <button id="fullscreen-btn">НАЧАТЬ</button>
     </div>
 
     <div id="game-container">
-        <!-- Ресурсы смещены вниз под вырез камеры -->
         <div id="top-bar">
-            <div>Игрок: <span id="stat-name" class="stat player-name">Не вошел</span></div>
-            <div>Монеты: <span id="stat-coins" class="stat">0</span></div>
-            <div>Кристаллы: <span id="stat-crystals" class="stat crystals">0</span></div>
+            <div class="user-tag" id="ui-username">Игрок: -</div>
+            <div class="currency-box" id="stat-coins">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffa502"/><circle cx="12" cy="12" r="7" fill="#ff7f50"/></svg>
+                <span id="val-coins">0</span>
+            </div>
+            <div class="currency-box" id="stat-crystals">
+                <svg viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="#00d2d3"/></svg>
+                <span id="val-crystals">0</span>
+            </div>
         </div>
 
-        <div class="screen-container">
-            <!-- Главный экран -->
-            <div id="screen-home" class="screen active">
+        <div id="main-content">
+            <div id="timers-panel"></div>
+            <div id="tap-wrapper">
                 <div id="tap-area">TAP</div>
-                <div id="home-log" class="log-box">
-                    <div class="log-entry log-system">Система: SOUL COMMAND. Введите /reg [имя] для старта.</div>
+            </div>
+            <div id="log-container">
+                <div class="log-line log-sys">Система: Добро пожаловать! Зарегистрируйте аккаунт командой: /reg &lt;имя&gt;</div>
+            </div>
+
+            <div id="screen-inv" class="sub-screen">
+                <h3>ИНВЕНТАРЬ ПЕРСОНАЖА</h3>
+                <div class="mc-grid" id="inv-grid-box"></div>
+            </div>
+
+            <div id="screen-craft" class="sub-screen">
+                <h3>КРАФТ ВЕРСТАК 3х3</h3>
+                <div class="craft-layout">
+                    <div class="grid-3x3" id="craft-matrix"></div>
+                    <div class="craft-arrow">⬇ РЕЗУЛЬТАТ СБОРКИ ⬇</div>
+                    <div class="mc-slot" id="craft-output" style="border-color: #ffa502;"></div>
+                    <button class="btn-action" id="btn-do-craft" style="width:100%; background:#ffa502; margin-top:4px;">ЗАБРАТЬ ПРЕДМЕТ</button>
                 </div>
+                <p style="font-size:0.65rem; color:#8a9bb4; text-align:center; margin-top:2px;">Выделите предмет в инвентаре снизу и тапните ячейку верстака</p>
+                <div class="mc-grid" id="craft-inv-box"></div>
             </div>
 
-            <!-- Экран инвентаря -->
-            <div id="screen-inv" class="screen">
-                <h2>ИНВЕНТАРЬ</h2>
-                <div id="inv-grid" class="mc-inventory-grid"></div>
-            </div>
-
-            <!-- Экран крафта -->
-            <div id="screen-craft" class="screen">
-                <h2>КРАФТ ПРЕДМЕТОВ</h2>
-                <p style="font-size: 0.8rem; margin: 5px; color:#ffcc00;">Рецепты (ввод: /craft [название]):</p>
-                <div style="font-size:0.75rem; text-align:left; background:#141822; padding:8px; border-radius:4px; max-width:300px;">
-                    • ключ = 5 Железо + 2 Пыль<br>
-                    • амулет = 3 Осколок + 10 Железо
+            <div id="screen-cases" class="sub-screen">
+                <h3>ТЕРМИНАЛ КЕЙСОВ</h3>
+                <div id="roulette-container">
+                    <div id="roulette-marker"></div>
+                    <div id="roulette-track"></div>
                 </div>
-                <div id="craft-grid" class="mc-inventory-grid"></div>
+                <button class="btn-action" id="btn-open-case" style="width:100%; margin-top:4px; background:#ffa502;">ОТКРЫТЬ ЯЩИК (1 КЛЮЧ)</button>
             </div>
 
-            <!-- Экран кейсов -->
-            <div id="screen-cases" class="screen">
-                <h2>ОТКРЫТИЕ КЕЙСОВ</h2>
-                <p style="font-size:0.85rem; color:#00ffcc; margin-bottom:10px;">Команда: /cases открыть</p>
-                <div id="cases-grid" class="mc-inventory-grid"></div>
+            <div id="screen-shop" class="sub-screen">
+                <h3>МАГАЗИН РЕСУРСОВ</h3>
+                <div style="display:flex; flex-direction:column; gap:5px;" id="shop-buy-list"></div>
+                <button class="btn-action" id="btn-shop-sellall" style="background:#ff4757; color:#fff; margin-top:4px;">ПРОДАТЬ ВЕСЬ ЛУТ</button>
+                <div class="mc-grid" id="shop-sell-grid" style="margin-top:6px;"></div>
+            </div>
+
+            <div id="screen-up" class="sub-screen">
+                <h3>МОДИФИКАЦИЯ ХАРАКТЕРИСТИК</h3>
+                <div class="up-card">
+                    <div>
+                        <b style="font-size:0.8rem;">Сила тапа (Ур. <span id="lvl-tap">1</span>)</b><br>
+                        <span style="font-size:0.7rem; color:#8a9bb4;">Стоимость: <span id="cost-tap">50</span> монет</span>
+                    </div>
+                    <button class="btn-action" onclick="upgradeStat('tap')">АПГРЕЙД</button>
+                </div>
+                <div class="up-card">
+                    <div>
+                        <b style="font-size:0.8rem;">Удача дропа (Ур. <span id="lvl-luck">1</span>)</b><br>
+                        <span style="font-size:0.7rem; color:#8a9bb4;">Стоимость: <span id="cost-luck">100</span> монет</span>
+                    </div>
+                    <button class="btn-action" onclick="upgradeStat('luck')">АПГРЕЙД</button>
+                </div>
             </div>
         </div>
 
-        <!-- Сворачиваемая консоль -->
         <div id="console-wrapper">
-            <div id="console-toggle">▼ СВЕРНУТЬ / РАЗВЕРНУТЬ КОНСОЛЬ ▼</div>
-            <div id="hints-container"></div>
-            <div id="command-bar">
-                <span id="cmd-prefix">></span>
+            <div id="toggle-console-btn">▼ СВЕРНУТЬ КОНСОЛЬ ▼</div>
+            <div id="hints-bar"></div>
+            <div id="input-row">
+                <span id="cmd-symbol">/</span>
                 <input type="text" id="cmd-input" placeholder="Введите команду..." autocomplete="off">
             </div>
         </div>
     </div>
 
+    <div id="context-modal">
+        <div class="context-box">
+            <h4 id="context-item-title" style="color:#00d2d3; font-size:0.9rem;">Предмет</h4>
+            <button class="context-btn" id="ctx-btn-primary" style="background:#2ed573; color:#000;">Действие</button>
+            <button class="context-btn" id="ctx-btn-sell" style="background:#ffa502; color:#000;">Продать</button>
+            <button class="context-btn" style="background:#373737; color:#fff;" onclick="closeContext()">Назад</button>
+        </div>
+    </div>
     <script>
-        // Чистые SVG-иконки без загрузки картинок
-        const svgs = {
-            "Железо": `<svg viewBox="0 0 32 32"><path d="M4 16 L16 4 L28 16 L16 28 Z" fill="#d1d8e0" stroke="#708090" stroke-width="2"/></svg>`,
-            "Магическая пыль": `<svg viewBox="0 0 32 32"><circle cx="8" cy="8" r="3" fill="#e0aaff"/><circle cx="24" cy="12" r="2" fill="#c77dff"/><circle cx="14" cy="24" r="4" fill="#9d4edd"/></svg>`,
-            "Осколок Души": `<svg viewBox="0 0 32 32"><path d="M16 2 L24 14 L16 18 L8 14 Z" fill="#00e5ff" opacity="0.8"/><path d="M16 18 L24 14 L16 30 L8 14 Z" fill="#00838f"/></svg>`,
-            "Ключ от кейса": `<svg viewBox="0 0 32 32"><circle cx="10" cy="12" r="6" fill="none" stroke="#ffd700" stroke-width="4"/><path d="M16 12 L28 12 M24 12 L24 18 M28 12 L28 18" stroke="#ffd700" stroke-width="4" stroke-linecap="square"/></svg>`,
-            "Амулет Души": `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="#242933" stroke="#ff3e3e" stroke-width="3"/><circle cx="16" cy="16" r="5" fill="#00e5ff"/></svg>`,
-            "Секретный Меч": `<svg viewBox="0 0 32 32"><path d="M28 4 L24 8 L12 20 L8 20 L8 16 L20 4 Z" fill="#ff0055"/><rect x="4" y="24" width="6" height="6" fill="#ffd700"/><path d="M8 20 L4 24 M12 20 L8 24" stroke="#a3e7fc" stroke-width="2"/></svg>`
+        const SVGS = {
+            "Железо": `<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" fill="#d2d4dc" stroke="#747d8c" stroke-width="2"/></svg>`,
+            "Магическая пыль": `<svg viewBox="0 0 24 24"><circle cx="7" cy="7" r="2.5" fill="#ff4757"/><circle cx="17" cy="15" r="2.5" fill="#54a0ff"/><circle cx="13" cy="6" r="2" fill="#ffa502"/></svg>`,
+            "Осколок Души": `<svg viewBox="0 0 24 24"><polygon points="12,3 17,9 12,21 7,9" fill="#a55eea" stroke="#8854d0" stroke-width="2"/></svg>`,
+            "Ключ от кейса": `<svg viewBox="0 0 24 24"><path d="M6 13a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm4-3.5h9v2h-2v2h-1.5v-2h-5.5v-2z" fill="#eccc68"/></svg>`,
+            "Амулет Души": `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="#20bf6b" stroke="#26de81" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="#ffb8b8"/></svg>`,
+            "Бустер Клика (Базовый)": `<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke="#ff4757" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#ff6b81"/></svg>`,
+            "Бустер Удачи (Базовый)": `<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke="#2ed573" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#7bed9f"/></svg>`,
+            "Бустер Клика (Улучшенный X)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#ff4757"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">X</text></svg>`,
+            "Бустер Клика (Улучшенный Время)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#ff6b81"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">T</text></svg>`,
+            "Бустер Удачи (Улучшенный X)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#2ed573"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">X</text></svg>`,
+            "Бустер Удачи (Улучшенный Время)": `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#7bed9f"/><text x="7" y="16" font-weight="bold" fill="#000" font-size="11">T</text></svg>`,
+            "Секретный Меч": `<svg viewBox="0 0 24 24"><path d="M19 2l3 3L7 20l-3 2 2-3z" fill="#ff4757" stroke="#fff" stroke-width="1.5"/></svg>`
         };
 
-        const player = {
-            registered: false,
-            name: "Не вошел",
-            coins: 0,
-            crystals: 0,
-            inventory: { "Железо": 0, "Магическая пыль": 0, "Осколок Души": 0, "Ключ от кейса": 0, "Амулет Души": 0, "Секретный Меч": 0 },
-            lvlTap: 1,
-            lvlLuck: 0,
-            usedPromo: false
+        const PRICES = {
+            "Железо": { buy: 15, sell: 5 }, "Магическая пыль": { buy: 30, sell: 10 }, "Осколок Души": { buy: 100, sell: 35 },
+            "Ключ от кейса": { buy: 200, sell: 70 }, "Амулет Души": { buy: 500, sell: 150 },
+            "Бустер Клика (Базовый)": { buy: 150, sell: 40 }, "Бустер Удачи (Базовый)": { buy: 150, sell: 40 },
+            "Бустер Клика (Улучшенный X)": { buy: 400, sell: 120 }, "Бустер Клика (Улучшенный Время)": { buy: 400, sell: 120 },
+            "Бустер Удачи (Улучшенный X)": { buy: 400, sell: 120 }, "Бустер Удачи (Улучшенный Время)": { buy: 400, sell: 120 },
+            "Секретный Меч": { buy: 9999, sell: 1500 }
         };
 
-        const dropTable = [
-            { item: "Железо", baseChance: 0.035 },
-            { item: "Магическая пыль", baseChance: 0.012 },
-            { item: "Осколок Души", baseChance: 0.003 }
+        let state = {
+            user: { name: "Не зарегистрирован", reg: false },
+            coins: 0, crystals: 0,
+            stats: { tapLvl: 1, luckLvl: 1 },
+            inv: {},
+            matrix: Array(9).fill(null),
+            selectedInvItem: null,
+            promos: { school: false },
+            activeBuffs: []
+        };
+
+        for (let item in SVGS) { state.inv[item] = 0; }
+
+        const commands = [
+            { cmd: "/home", hint: "/home (Экран кликов)" }, { cmd: "/inv", hint: "/inv (Инвентарь)" },
+            { cmd: "/craft", hint: "/craft (Верстак 3х3)" }, { cmd: "/cases", hint: "/cases (Кейсы)" },
+            { cmd: "/shop", hint: "/shop (Магазин)" }, { cmd: "/up", hint: "/up (Прокачка)" },
+            { cmd: "/help", hint: "/help (Справка)" }, { cmd: "/event", hint: "/event (Заблокировано)" },
+            { cmd: "/reg", hint: "/reg <name>" }
         ];
 
-        const commandsConfig = [
-            { cmd: "/home", hint: "/home", auto: true },
-            { cmd: "/inv", hint: "/inv", auto: true },
-            { cmd: "/craft", hint: "/craft", auto: false },
-            { cmd: "/cases", hint: "/cases", auto: false },
-            { cmd: "/up", hint: "/up", auto: false },
-            { cmd: "/event", hint: "/event (Выкл)", auto: true },
-            { cmd: "/help", hint: "/help", auto: true },
-            { cmd: "/promo", hint: "/promo", auto: false }
-        ];
-
-        // Полноэкранный портретный режим
         const overlay = document.getElementById('fullscreen-overlay');
-        async function activateFullscreen() {
-            try {
-                if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-                if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait');
-                overlay.style.display = 'none';
-            } catch (e) { overlay.style.display = 'none'; }
-        }
-        document.getElementById('fullscreen-btn').addEventListener('click', activateFullscreen);
-        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) overlay.style.display = 'flex'; });
-
-        // Сворачивание консоли
-        const consoleWrapper = document.getElementById('console-wrapper');
-        const toggleBtn = document.getElementById('console-toggle');
-        toggleBtn.addEventListener('click', () => {
-            consoleWrapper.classList.toggle('collapsed');
-            toggleBtn.innerText = consoleWrapper.classList.contains('collapsed') ? "▲ РАЗВЕРНУТЬ КОНСОЛЬ ▲" : "▼ СВЕРНУТЬ КОНСОЛЬ ▼";
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
+            overlay.style.display = 'none';
         });
 
-        function updateUI() {
-            document.getElementById('stat-name').innerText = player.name;
-            document.getElementById('stat-coins').innerText = player.coins;
-            document.getElementById('stat-crystals').innerText = player.crystals;
-            renderGrids();
+        function pushLog(text, type = '') {
+            const container = document.getElementById('log-container');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.innerText = text;
+            container.appendChild(line);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+    <script>
+        function saveGame() {
+            localStorage.setItem('soul_command_save_v2', JSON.stringify({
+                user: state.user, coins: state.coins, crystals: state.crystals,
+                stats: state.stats, inv: state.inv, promos: state.promos
+            }));
         }
 
-        function renderGrids() {
-            ["inv-grid", "craft-grid", "cases-grid"].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.innerHTML = '';
-                for (let item in player.inventory) {
-                    if (player.inventory[item] === 0 && (item === "Секретный Меч" || item === "Амулет Души" || item === "Ключ от кейса")) continue;
-                    const slot = document.createElement('div');
-                    slot.className = 'mc-slot';
-                    slot.innerHTML = (svgs[item] || '') + `<div class="mc-count">${player.inventory[item]}</div>`;
-                    el.appendChild(slot);
-                }
-            });
+        function loadGame() {
+            let data = localStorage.getItem('soul_command_save_v2');
+            if (data) {
+                let parsed = JSON.parse(data);
+                state.user = parsed.user || state.user;
+                state.coins = parsed.coins || 0;
+                state.crystals = parsed.crystals || 0;
+                state.stats = parsed.stats || state.stats;
+                state.promos = parsed.promos || state.promos;
+                if (parsed.inv) { for(let k in parsed.inv) state.inv[k] = parsed.inv[k]; }
+            }
         }
 
-        function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        function syncUI() {
+            document.getElementById('ui-username').innerText = "Игрок: " + state.user.name;
+            document.getElementById('val-coins').innerText = Math.floor(state.coins);
+            document.getElementById('val-crystals').innerText = Math.floor(state.crystals);
+            document.getElementById('lvl-tap').innerText = state.stats.tapLvl;
+            document.getElementById('cost-tap').innerText = state.stats.tapLvl * 50;
+            document.getElementById('lvl-luck').innerText = state.stats.luckLvl;
+            document.getElementById('cost-luck').innerText = state.stats.luckLvl * 100;
+            renderAllGrids();
+            saveGame();
         }
 
-        function logToHome(text, type = '') {
-            const box = document.getElementById('home-log');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            entry.innerText = text;
-            box.appendChild(entry);
-            box.scrollTop = box.scrollHeight;
-        }
+        function hideAllScreens() { document.querySelectorAll('.sub-screen').forEach(s => s.classList.remove('active')); }
 
-        // Клик тапалки (шанс ~1 к 20 тапам базово)
         document.getElementById('tap-area').addEventListener('click', () => {
-            if (!player.registered) return logToHome("Ошибка: Введите /reg [имя]", "log-error");
-            player.coins += player.lvlTap;
-            let msg = `+${player.lvlTap} монет.`;
-            let rand = Math.random();
-            let luckMod = 1 + (player.lvlLuck * 0.2);
-            let dropped = null;
-            let currentChance = 0;
+            if (!state.user.reg) { pushLog("Ошибка: Пройдите регистрацию через /reg <имя>", "log-err"); return; }
+            let clickPower = state.stats.tapLvl;
+            let schoolBuff = state.activeBuffs.find(b => b.id === 'school');
+            let clickBuffX = state.activeBuffs.find(b => b.id === 'b_click_x');
+            let clickBuffT = state.activeBuffs.find(b => b.id === 'b_click_t');
 
-            for (let d of dropTable) {
-                currentChance += (d.baseChance * luckMod);
-                if (rand <= currentChance) { dropped = d.item; break; }
-            }
-            let cName = '';
-            if (dropped) { player.inventory[dropped]++; msg += ` Найдено: [${dropped}]!`; cName = 'log-drop'; }
-            logToHome(msg, cName);
-            updateUI();
+            if (schoolBuff) clickPower *= 3.5;
+            if (clickBuffX) clickPower *= 5;
+            if (clickBuffT) clickPower *= 2;
+            if (!clickBuffX && !clickBuffT && state.activeBuffs.find(b => b.type === 'click_base')) clickPower *= 2;
+
+            clickPower += (state.inv["Амулет Души"] || 0) * 1;
+            state.coins += clickPower;
+            let logMsg = `Тап! Монеты: +${clickPower.toFixed(1)}.`;
+
+            let baseLuck = 0.05 + (state.stats.luckLvl - 1) * 0.01;
+            if (schoolBuff) baseLuck *= 3;
+            if (state.activeBuffs.find(b => b.id === 'b_luck_x')) baseLuck *= 3;
+            if (state.activeBuffs.find(b => b.id === 'b_luck_t')) baseLuck *= 1.5;
+            if (state.activeBuffs.find(b => b.type === 'luck_base')) baseLuck *= 1.5;
+            baseLuck += (state.inv["Амулет Души"] || 0) * 0.10;
+
+            if (Math.random() <= baseLuck) {
+                let rnd = Math.random();
+                let itemDropped = "Железо";
+                if (rnd > 0.65 && rnd <= 0.92) itemDropped = "Магическая пыль";
+                if (rnd > 0.92) itemDropped = "Осколок Души";
+                state.inv[itemDropped]++;
+                logMsg += ` Выпало: [${itemDropped}]!`;
+                pushLog(logMsg, "log-suc");
+            } else { pushLog(logMsg); }
+            syncUI();
         });
 
-        // Ввод команд
-        const input = document.getElementById('cmd-input');
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const val = input.value.trim();
-                input.value = '';
-                input.blur();
-                if (val) handleCommand(val);
-                updateHints('');
-            }
+        const cmdInput = document.getElementById('cmd-input');
+        const hintsBar = document.getElementById('hints-bar');
+
+        cmdInput.addEventListener('input', (e) => {
+            let val = e.target.value; hintsBar.innerHTML = '';
+            if (!val.startsWith('/')) return;
+            let filtered = commands.filter(c => c.cmd.startsWith(val.toLowerCase()));
+            filtered.forEach(c => {
+                let badge = document.createElement('div'); badge.className = 'hint-tab'; badge.innerText = c.hint;
+                badge.addEventListener('click', () => { cmdInput.value = c.cmd; executeCommand(c.cmd); cmdInput.value = ''; cmdInput.blur(); hintsBar.innerHTML = ''; });
+                hintsBar.appendChild(badge);
+            });
         });
 
-        function handleCommand(str) {
-            if (!str.startsWith('/')) return logToHome("Ошибка: Команды начинаются с /", "log-error");
-            const args = str.split(' ');
-            const cmd = args[0].toLowerCase();
-
-            switch(cmd) {
-                case '/reg':
-                    if (player.registered) return logToHome("Вы уже зарегистрированы", "log-error");
-                    if (!args[1]) return logToHome("Использование: /reg [имя]", "log-error");
-                    player.name = args.slice(1).join(' ');
-                    player.registered = true;
-                    logToHome(`Успешный вход, ${player.name}!`, "log-system");
-                    break;
-                case '/home': switchScreen('screen-home'); break;
-                case '/inv': switchScreen('screen-inv'); break;
-                case '/event': logToHome("Режим /event деактивирован.", "log-error"); break;
-                case '/help':
-                    logToHome("Команды: /reg, /home, /inv, /craft, /cases, /up, /promo", "log-system");
-                    break;
-                case '/promo':
-                    if (player.usedPromo) return logToHome("Промокод уже использован", "log-error");
-                    if (args[1] === 'MY_K7D') {
-                        player.crystals += 50; player.usedPromo = true;
-                        logToHome("Активирован код! +50 кристаллов.", "log-drop");
-                    } else { logToHome("Неверный код.", "log-error"); }
-                    break;
-                case '/craft':
-                    switchScreen('screen-craft');
-                    if (args[1]) {
-                        let t = args.slice(1).join(' ').toLowerCase();
-                        if (t === 'ключ') {
-                            if (player.inventory["Железо"] >= 5 && player.inventory["Магическая пыль"] >= 2) {
-                                player.inventory["Железо"] -= 5; player.inventory["Магическая пыль"] -= 2;
-                                player.inventory["Ключ от кейса"]++; logToHome("Создан: Ключ от кейса!", "log-drop");
-                            } else logToHome("Мало ресурсов.", "log-error");
-                        } else if (t === 'амулет') {
-                            if (player.inventory["Осколок Души"] >= 3 && player.inventory["Железо"] >= 10) {
-                                player.inventory["Осколок Души"] -= 3; player.inventory["Железо"] -= 10;
-                                player.inventory["Амулет Души"]++; logToHome("Создан: Амулет Души!", "log-drop");
-                            } else logToHome("Мало ресурсов.", "log-error");
-                        } else if (t === 'секретный меч') {
-                            // Секретный рецепт скрыт от глаз
-                            if (player.inventory["Осколок Души"] >= 10 && player.inventory["Амулет Души"] >= 2) {
-                                player.inventory["Осколок Души"] -= 10; player.inventory["Амулет Души"] -= 2;
-                                player.inventory["Секретный Меч"]++; logToHome("!! Вы открыли СЕКРЕТНЫЙ КРАФТ: Секретный Меч !!", "log-drop");
-                            } else logToHome("Секретная комбинация не сработала.", "log-error");
-                        } else logToHome("Нет такого рецепта.", "log-error");
-                    }
-                    break;
-                case '/cases':
-                    switchScreen('screen-cases');
-                    if (args[1] === 'открыть') {
-                        if (player.inventory["Ключ от кейса"] > 0) {
-                            player.inventory["Ключ от кейса"]--;
-                            if (Math.random() > 0.5) { player.crystals += 25; logToHome("Кейс: +25 Кристаллов!", "log-drop"); }
-                            else { player.inventory["Амулет Души"]++; logToHome("Кейс: Амулет Души!", "log-drop"); }
-                        } else logToHome("Нет ключей. Создайте их в /craft", "log-error");
-                    }
-                    break;
-                case '/up':
-                    let upCostTap = player.lvlTap * 50;
-                    let upCostLuck = (player.lvlLuck + 1) * 100;
-                    if (args[1] === 'tap') {
-                        if (player.coins >= upCostTap) { player.coins -= upCostTap; player.lvlTap++; logToHome(`Прокачан Тап до ${player.lvlTap} ур.`); }
-                        else logToHome(`Мало монет. Нужно: ${upCostTap}`, "log-error");
-                    } else if (args[1] === 'luck') {
-                        if (player.coins >= upCostLuck) { player.coins -= upCostLuck; player.lvlLuck++; logToHome(`Прокачана Удача до ${player.lvlLuck} ур.`); }
-                        else logToHome(`Мало монет. Нужно: ${upCostLuck}`, "log-error");
-                    } else {
-                        logToHome(`Прокачка: /up tap (Цена: ${upCostTap}) или /up luck (Цена: ${upCostLuck})`, "log-system");
-                    }
-                    break;
-                default: logToHome("Неизвестная команда.", "log-error");
+        cmdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { let val = cmdInput.value.trim(); executeCommand(val); cmdInput.value = ''; hintsBar.innerHTML = ''; cmdInput.blur(); } });
+        let consoleCollapsed = false;
+        document.getElementById('toggle-console-btn').addEventListener('click', () => {
+            consoleCollapsed = !consoleCollapsed;
+            if (consoleCollapsed) { hintsBar.style.display = 'none'; document.getElementById('input-row').style.display = 'none'; document.getElementById('toggle-console-btn').innerText = '▲ РАЗВЕРНУТЬ КОНСОЛЬ ▲'; }
+            else { hintsBar.style.display = 'flex'; document.getElementById('input-row').style.display = 'flex'; document.getElementById('toggle-console-btn').innerText = '▼ СВЕРНУТЬ КОНСОЛЬ ▼'; }
+        });
+    </script>
+    <script>
+        function executeCommand(str) {
+            if (!str.startsWith('/')) { pushLog("Ошибка: Команды начинаются с '/'", "log-err"); return; }
+            let parts = str.split(' '); let head = parts[0].toLowerCase(); let args = parts.slice(1).join(' ');
+            if (head === '/reg') {
+                if (state.user.reg) { pushLog(`Вы уже зарегистрированы под именем ${state.user.name}`, "log-err"); return; }
+                if (!args) { pushLog("Укажите имя!", "log-err"); return; }
+                state.user.name = args; state.user.reg = true; pushLog(`Успешная регистрация, ${state.user.name}!`, "log-suc"); syncUI(); return;
             }
-            updateUI();
+            if (!state.user.reg) { pushLog("Зарегистрируйтесь через /reg <имя>", "log-err"); return; }
+            switch(head) {
+                case '/home': hideAllScreens(); pushLog("Экран кликов активирован.", "log-sys"); break;
+                case '/inv': hideAllScreens(); document.getElementById('screen-inv').classList.add('active'); pushLog("Просмотр инвентаря.", "log-sys"); break;
+                case '/craft': hideAllScreens(); document.getElementById('screen-craft').classList.add('active'); pushLog("Верстак 3х3 развернут.", "log-sys"); break;
+                case '/cases': hideAllScreens(); document.getElementById('screen-cases').classList.add('active'); pushLog("Терминал кейсов запущен.", "log-sys"); break;
+                case '/shop': hideAllScreens(); document.getElementById('screen-shop').classList.add('active'); pushLog("Магазин открыт.", "log-sys"); break;
+                case '/up': hideAllScreens(); document.getElementById('screen-up').classList.add('active'); pushLog("Меню улучшений запущено.", "log-sys"); break;
+                case '/school':
+                    if (state.promos.school) { pushLog("Промокод уже был активирован!", "log-err"); return; }
+                    state.promos.school = true; activateBuff('school', 'Промо-Буст', 300); pushLog("X3.5 к кликам и X3 к удаче на 5 минут активированы!", "log-suc"); break;
+                case '/help': pushLog("Доступно: /inv, /craft, /shop, /cases, /up, /home", "log-sys"); break;
+                default: pushLog("Неизвестная команда. См. /help", "log-err");
+            }
+            syncUI();
         }
 
-        // Подсказки
-        const hints = document.getElementById('hints-container');
-        input.addEventListener('input', (e) => updateHints(e.target.value));
+        function upgradeStat(type) {
+            if (type === 'tap') { let cost = state.stats.tapLvl * 50; if (state.coins >= cost) { state.coins -= cost; state.stats.tapLvl++; pushLog(`Сила тапа повышена!`, "log-suc"); } else { pushLog("Недостаточно монет!", "log-err"); } }
+            if (type === 'luck') { let cost = state.stats.luckLvl * 100; if (state.coins >= cost) { state.coins -= cost; state.stats.luckLvl++; pushLog(`Удача повышена!`, "log-suc"); } else { pushLog("Недостаточно монет!", "log-err"); } }
+            syncUI();
+        }
 
-        function updateHints(val) {
-            hints.innerHTML = '';
-            if (!val.startsWith('/') || !val) return;
-            commandsConfig.filter(c => c.cmd.startsWith(val.toLowerCase())).forEach(item => {
-                const b = document.createElement('div');
-                b.className = 'hint-badge';
-                b.innerText = item.hint;
-                b.addEventListener('click', () => {
-                    if (item.auto) {
-                        input.value = '';
-                        input.blur();
-                        handleCommand(item.cmd);
-                    } else {
-                        input.value = item.cmd + " ";
-                        input.focus();
-                    }
-                });
-                hints.appendChild(b);
+        function renderAllGrids() {
+            const invBox = document.getElementById('inv-grid-box'); invBox.innerHTML = '';
+            for (let name in state.inv) { if (state.inv[name] > 0) invBox.appendChild(createSlot(name, state.inv[name], () => openContext(name))); }
+            const craftInv = document.getElementById('craft-inv-box'); craftInv.innerHTML = '';
+            for (let name in state.inv) { if (state.inv[name] > 0) { let isSelected = state.selectedInvItem === name; let slot = createSlot(name, state.inv[name], () => { state.selectedInvItem = isSelected ? null : name; syncUI(); }); if (isSelected) slot.classList.add('selected'); craftInv.appendChild(slot); } }
+            const shopSellBox = document.getElementById('shop-sell-grid'); shopSellBox.innerHTML = '';
+            for (let name in state.inv) { if (state.inv[name] > 0) { shopSellBox.appendChild(createSlot(name, state.inv[name], () => { state.inv[name]--; state.coins += PRICES[name].sell; syncUI(); })); } }
+            const matrixBox = document.getElementById('craft-matrix'); matrixBox.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                let itemName = state.matrix[i]; let slot = document.createElement('div'); slot.className = 'mc-slot';
+                if (itemName) { slot.innerHTML = SVGS[itemName]; slot.addEventListener('click', () => { state.inv[itemName]++; state.matrix[i] = null; syncUI(); }); }
+                else { slot.addEventListener('click', () => { if (state.selectedInvItem) { state.matrix[i] = state.selectedInvItem; state.inv[state.selectedInvItem]--; if (state.inv[state.selectedInvItem] <= 0) state.selectedInvItem = null; syncUI(); } }); }
+                matrixBox.appendChild(slot);
+            }
+            checkCraftRecipes();
+            const shopBox = document.getElementById('shop-buy-list'); shopBox.innerHTML = '';
+            const buyable = ["Железо", "Магическая пыль", "Ключ от кейса", "Амулет Души", "Бустер Клика (Базовый)", "Бустер Удачи (Базовый)"];
+            buyable.forEach(name => {
+                let row = document.createElement('div'); row.className = 'shop-row'; row.innerHTML = `<div style="display:flex; align-items:center; gap:6px;">${SVGS[name]} <span>${name}</span></div>`;
+                let btn = document.createElement('button'); btn.className = 'btn-action'; btn.innerText = `${PRICES[name].buy} 💰`;
+                btn.addEventListener('click', () => { if (state.coins >= PRICES[name].buy) { state.coins -= PRICES[name].buy; state.inv[name]++; pushLog(`Куплено: [${name}]`, "log-suc"); syncUI(); } else { pushLog("Недостаточно монет!", "log-err"); } });
+                row.appendChild(btn); shopBox.appendChild(row);
             });
         }
-        updateUI();
+
+        function createSlot(name, count, clickFn) { let slot = document.createElement('div'); slot.className = 'mc-slot'; slot.innerHTML = SVGS[name] + `<div class="mc-count">${count}</div>`; slot.addEventListener('click', clickFn); return slot; }
+    </script>
+    <script>
+        let currentCraftResult = null;
+        function checkCraftRecipes() {
+            const outSlot = document.getElementById('craft-output'); outSlot.innerHTML = ''; currentCraftResult = null;
+            let counts = {}; let total = 0; state.matrix.forEach(item => { if (item) { counts[item] = (counts[item] || 0) + 1; total++; } });
+            if (counts["Железо"] === 5 && counts["Магическая пыль"] === 2 && total === 7) currentCraftResult = "Ключ от кейса";
+            else if (counts["Осколок Души"] === 3 && counts["Железо"] === 6 && total === 9) currentCraftResult = "Амулет Души";
+            else if (counts["Железо"] === 4 && counts["Магическая пыль"] === 4 && total === 8) currentCraftResult = "Бустер Клика (Базовый)";
+            else if (counts["Магическая пыль"] === 4 && counts["Осколок Души"] === 4 && total === 8) currentCraftResult = "Бустер Удачи (Базовый)";
+            else if (counts["Магическая пыль"] === 5 && counts["Железо"] === 3 && total === 9) { if (counts["Бустер Клика (Базовый)"] === 1) currentCraftResult = "Бустер Клика (Улучшенный X)"; if (counts["Бустер Удачи (Базовый)"] === 1) currentCraftResult = "Бустер Удачи (Улучшенный X)"; }
+            else if (counts["Магическая пыль"] === 3 && counts["Железо"] === 5 && total === 9) { if (counts["Бустер Клика (Базовый)"] === 1) currentCraftResult = "Бустер Клика (Улучшенный Время)"; if (counts["Бустер Удачи (Базовый)"] === 1) currentCraftResult = "Бустер Удачи (Улучшенный Время)"; }
+            else if (counts["Осколок Души"] === 5 && counts["Амулет Души"] === 2 && total === 7) currentCraftResult = "Секретный Меч";
+            if (currentCraftResult) outSlot.innerHTML = SVGS[currentCraftResult];
+        }
+
+        document.getElementById('btn-do-craft').addEventListener('click', () => { if (currentCraftResult) { state.inv[currentCraftResult]++; pushLog(`Скрафчено: [${currentCraftResult}]!`, "log-suc"); state.matrix = Array(9).fill(null); syncUI(); } else { pushLog("Рецепт не собран!", "log-err"); } });
+
+        let activeContextItem = null;
+        function openContext(name) {
+            activeContextItem = name; document.getElementById('context-item-title').innerText = name;
+            let pBtn = document.getElementById('ctx-btn-primary'); document.getElementById('ctx-btn-sell').innerText = `Продать за ${PRICES[name].sell} 💰`;
+            if (name.startsWith("Бустер")) { pBtn.innerText = "Активировать эффект"; pBtn.onclick = () => { useBoosterItem(name); closeContext(); }; }
+            else { pBtn.innerText = "Отправить в Верстак"; pBtn.onclick = () => { state.selectedInvItem = name; hideAllScreens(); document.getElementById('screen-craft').classList.add('active'); closeContext(); syncUI(); }; }
+            document.getElementById('context-modal').style.display = 'flex';
+        }
+        function closeContext() { document.getElementById('context-modal').style.display = 'none'; }
+
+        document.getElementById('ctx-btn-sell').addEventListener('click', () => { if (activeContextItem && state.inv[activeContextItem] > 0) { state.inv[activeContextItem]--; state.coins += PRICES[activeContextItem].sell; closeContext(); syncUI(); } });
+        document.getElementById('btn-shop-sellall').addEventListener('click', () => { for (let name in state.inv) { if (name !== "Секретный Меч" && state.inv[name] > 0) { state.coins += state.inv[name] * PRICES[name].sell; state.inv[name] = 0; } } syncUI(); });
+
+        function useBoosterItem(name) {
+            if (state.inv[name] <= 0) return; state.inv[name]--; let duration = 60; if (name.includes("Улучшенный Время")) duration = 180;
+            if (name.includes("Клика")) { let type = name.includes("Улучшенный X") ? 'b_click_x' : (name.includes("Улучшенный Время") ? 'b_click_t' : 'click_base'); activateBuff(type, name, duration); }
+            else if (name.includes("Удачи")) { let type = name.includes("Улучшенный X") ? 'b_luck_x' : (name.includes("Улучшенный Время") ? 'b_luck_t' : 'luck_base'); activateBuff(type, name, duration); }
+            syncUI();
+        }
+        function activateBuff(id, title, duration) { state.activeBuffs = state.activeBuffs.filter(b => b.id !== id); state.activeBuffs.push({ id: id, title: title, left: duration }); renderBuffTimers(); }
+        function renderBuffTimers() { const panel = document.getElementById('timers-panel'); panel.innerHTML = ''; state.activeBuffs.forEach(b => { let badge = document.createElement('div'); badge.className = 'timer-badge'; badge.innerText = `⏱ ${b.title}: ${b.left} сек.`; panel.appendChild(badge); }); }
+        setInterval(() => { if (state.activeBuffs.length > 0) { state.activeBuffs.forEach(b => b.left--); state.activeBuffs = state.activeBuffs.filter(b => b.left > 0); renderBuffTimers(); } }, 1000);
+
+        let rouletteSpinning = false;
+        document.getElementById('btn-open-case').addEventListener('click', () => {
+            if (rouletteSpinning || state.inv["Ключ от кейса"] < 1) return;
+            state.inv["Ключ от кейса"]--; rouletteSpinning = true;
+            const track = document.getElementById('roulette-track'); track.innerHTML = ''; track.style.transition = 'none'; track.style.transform = 'translateX(0px)';
+            const pool = Object.keys(SVGS).filter(n => n !== "Ключ от кейса"); let finalPrize = "";
+            for(let i=0; i<25; i++) { let item = pool[Math.floor(Math.random() * pool.length)]; if (i === 20) finalPrize = item; let block = document.createElement('div'); block.className = 'roulette-item'; block.innerHTML = SVGS[item]; track.appendChild(block); }
+            setTimeout(() => { track.style.transition = 'transform 3.2s cubic-bezier(0.1, 0.8, 0.1, 1)'; track.style.transform = 'translateX(-950px)'; }, 40);
+            setTimeout(() => { rouletteSpinning = false; state.inv[finalPrize]++; pushLog(`Выпало: [${finalPrize}]!`, "log-suc"); syncUI(); }, 3300);
+        });
+
+        loadGame();
+        syncUI();
     </script>
 </body>
 </html>
